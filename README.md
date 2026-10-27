@@ -15,8 +15,8 @@ Open `baseball.html` in Chrome. It needs internet the first time to load three.j
 | Path | What it is |
 | --- | --- |
 | `baseball.html` | The whole game |
-| `mocap/clips.js` | Pitch, swing and bunt motion, generated from `mocap/raw/` |
-| `mocap/raw/` | CMU motion-capture source files (subject 124) |
+| `mocap/clips.js` | Pitch, swing, bunt and run motion, generated from `mocap/raw/` |
+| `mocap/raw/` | CMU motion-capture source files (subjects 124 and 9) |
 | `tools/amc2json.py` | Converts the CMU files into `mocap/clips.js` |
 | `models/male.js` | Player body, embedded so the game works from `file://` |
 | `models/raw/` | Original model download |
@@ -29,5 +29,5 @@ python3 -I tools/amc2json.py mocap/raw mocap/clips.js
 
 ## Credits
 
-- Motion: [CMU Graphics Lab Motion Capture Database](http://mocap.cs.cmu.edu/), subject 124. Free to use; the data may not be resold.
+- Motion: [CMU Graphics Lab Motion Capture Database](http://mocap.cs.cmu.edu/), subject 124 (pitch, swing, bunt) and subject 9 (run). Free to use; the data may not be resold.
 - Player body: "3D Male Base Mesh" by orange-juice-games ([GitHub re-upload](https://github.com/BoQsc/Godot-3D-Male-Base-Mesh)), CC0.

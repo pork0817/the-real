@@ -738,11 +738,17 @@ const FIELDP=mk(STAND,{pelv:[0,.62,.05],lHip:[.13,.6,.05],rHip:[-.13,.6,.05],lKn
 const CATCHF=mk(STAND,{lEl:[.28,1.6,.15],lHa:[.12,1.95,.3],rEl:[-.25,1.55,.15],rHa:[-.05,1.85,.3]});
 const RECV=mk(STAND,{pelv:[0,.9,0],lHip:[.12,.88,0],rHip:[-.12,.88,0],lKn:[.18,.5,.12],rKn:[-.18,.5,.12],lFt:[.25,.05,0],rFt:[-.25,.05,0],lEl:[.25,1.2,.3],lHa:[.1,1.35,.45],rEl:[-.25,1.15,.3],rHa:[-.05,1.3,.42]});
 const THROW_OFF=(()=>{const d=sampleClip(PC,RELEASE-.45,{});return V(d.pelv.x,0,d.pelv.z);})();
-function runPose(b,ph){const s=Math.sin(ph),c=Math.cos(ph),S=.5,st=(k,x,y,z)=>b[k].set(x,y,z);
-  st('pelv',0,.93+.035*Math.abs(c),.05);st('lHip',.1,.91,.05);st('rHip',-.1,.91,.05);
-  st('lFt',.11,.06+Math.max(0,c)*.28,S*s);st('rFt',-.11,.06+Math.max(0,-c)*.28,-S*s);st('lKn',.12,.55,.45);st('rKn',-.12,.55,.45);
-  st('neck',0,1.43,.2);st('head',0,1.58,.27);st('lSh',.19,1.38,.16);st('rSh',-.19,1.38,.16);
-  st('lHa',.22,1.05+.12*Math.max(0,-s),.15-.32*s);st('lEl',.27,1.12,-.2);st('rHa',-.22,1.05+.12*Math.max(0,s),.15+.32*s);st('rEl',-.27,1.12,-.2);b._m=0;fillAux(b);}
+// running: CMU subject 9 gait cycle (mocap/clips.js 'run', recorded at ~3.6 m/s). Faster runners take a quicker
+// cadence and a longer stride (feet and arms reach further from the pelvis) and lean forward a little.
+const RUN=CLIPS.run,RUN_V0=RUN?RUN.ev.stride/RUN.dur:3.6;
+const runStride=v=>{const k=Math.max(1,v/RUN_V0);return v/((RUN_V0/(RUN?RUN.ev.stride:2.7))*Math.pow(k,.65));};
+function runPose(b,dist,v){const c=RUN,cyc=dist/runStride(v),k=Math.max(1,v/RUN_V0),ks=Math.pow(k,.35);
+  sampleClip(c,(cyc-Math.floor(cyc))*c.dur,b);const pz=b.pelv.z,py=b.pelv.y,lean=.1*(k-1);
+  for(const j of['lFt','rFt','lToe','rToe','lKn','rKn'])b[j].z=pz+(b[j].z-pz)*ks;
+  for(const s of['l','r']){const H=b[s+'Hip'],F=b[s+'Ft'],T=b[s+'Toe'],r=H.distanceTo(F),mx=(LEN.th+LEN.sh)*.98;   // a longer stride must not out-reach the leg
+    if(r>mx){_g1.subVectors(F,H).multiplyScalar(mx/r).add(H).sub(F);F.add(_g1);T.add(_g1);}}
+  for(const j of['lHa','rHa','lEl','rEl'])b[j].z=pz+(b[j].z-pz)*Math.sqrt(ks);
+  for(const j of['chest','neck','head','lSh','rSh','lEl','rEl','lHa','rHa'])b[j].z+=Math.max(0,b[j].y-py)*lean;}
 function setJersey(p,num,name){p.o.num=num;p.o.name=name;if(p.numPlane){p.numPlane.material.map.dispose();p.numPlane.material.map=numTex(num,name,p.o.jerseyHex,p.o.numColor);}}
 function takeRunner(i){const r=RUNNERS.find(x=>!onBase.includes(x));const [n,num]=LINEUP[i%LINEUP.length];setJersey(r,num,n);return r;}
 function placeRunners(){for(const r of RUNNERS){const b=onBase.indexOf(r);r.g.visible=b>0;if(b<=0)continue;
@@ -812,11 +818,11 @@ function animPlay(dt){const P=play,pt=now-P.t0;
     p.g.position.set(d.pos.x,d.role==='P'?moundY(d.pos.x,d.pos.z):0,d.pos.z);
     let face=Math.atan2(ball.position.x-d.pos.x,ball.position.z-d.pos.z),key='ready';
     if(busy){if(pt<P.relT-.45)key=P.kind==='catch'?'catch':'field';else if(pt<P.relT+.7){key='throw';face=Math.atan2(BASE_PTS[P.throwTo].x-d.pos.x,BASE_PTS[P.throwTo].z-d.pos.z);}}
-    else if(step>d.spd*dt*.3){key='run';face=Math.atan2(to.x,to.z);d.ph+=step/2.2*Math.PI*2;}
+    else if(step>d.spd*dt*.3){key='run';face=Math.atan2(to.x,to.z);d.ph+=step;}
     else if(P.recv===d&&pt>P.relT-.4)key='recv';
     poseKey(p,key,key==='throw'?.12:.2);
     if(key==='throw'){sampleClip(PC,RELEASE+(pt-P.relT),b);for(const k in b)if(b[k].isVector3&&k!=='bat'){b[k].x-=THROW_OFF.x;b[k].z-=THROW_OFF.z;}}
-    else if(key==='run')runPose(b,d.ph);
+    else if(key==='run')runPose(b,d.ph,d.spd);
     else{const PZ=key==='catch'?CATCHF:key==='field'?FIELDP:key==='recv'?RECV:READY;lerpPose(PZ,PZ,0,b);b._m=0;fillAux(b);}
     blendIn(p);turnTo(p,face,dt);p.g.updateMatrixWorld();p.look=p.look||V();p.look.copy(ball.position);p.g.worldToLocal(p.look);
     p.holdBall=P.F===d&&pt>=P.tf+.3&&pt<P.relT;setPose(p,b);}
@@ -826,7 +832,7 @@ function animPlay(dt){const P=play,pt=now-P.t0;
     const L=pathLen(r.path),tEnd=r.out?Math.min(r.outT,r.start+L/r.spd):r.start+L/r.spd,dd=clamp((Math.min(pt,tEnd)-r.start)*r.spd,0,L);
     along(r.path,dd,p.g.position);const moving=pt<tEnd&&pt>r.start;
     if(moving){const ahead=along(r.path,Math.min(L,dd+.5),_g1);turnTo(p,Math.atan2(ahead.x-p.g.position.x,ahead.z-p.g.position.z),dt);}
-    poseKey(p,moving?'run':'stand',.2);if(moving)runPose(b,dd/2.2*Math.PI*2);else{lerpPose(READY,READY,0,b);b._m=0;fillAux(b);}blendIn(p);setPose(p,b);
+    poseKey(p,moving?'run':'stand',.2);if(moving)runPose(b,dd,r.spd);else{lerpPose(READY,READY,0,b);b._m=0;fillAux(b);}blendIn(p);setPose(p,b);
     if(r.target===4&&!r.out&&pt>=tEnd&&!r.scored){r.scored=true;runs++;hud();}
     if((r.out||r.scored)&&pt>tEnd+1.2){p.g.visible=false;r.hidden=true;}}}
 function finishPlay(silent){const P=play;if(!P||P.ended)return;P.ended=true;
