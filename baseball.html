@@ -572,7 +572,47 @@ let abOver=false,resultUntil=0,hb=null,cpuPlan=null;const count={b:0,s:0,o:0},ke
 const ray=new THREE.Raycaster(),zplane=new THREE.Plane(V(0,0,1),0);
 const redSize=()=>Math.min(.62,.08+.035*pitchCount);
 
-function flash(big,small){const m=$('msg');m.innerHTML=big+(small?`<small>${small}</small>`:'');m.classList.remove('show');void m.offsetWidth;m.classList.add('show');}
+// ---------- sound (all synthesized with Web Audio; no files) ----------
+const SFX=(()=>{let C=null,M,crowdG,crowdF,noise,muted=false,excite=0;
+  try{muted=localStorage.getItem('theReal.muted')==='1';}catch(e){}
+  function init(){if(C)return C.state==='suspended'&&C.resume();const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    C=new AC();M=C.createGain();M.gain.value=muted?0:.9;const lim=C.createDynamicsCompressor();lim.threshold.value=-10;lim.ratio.value=8;M.connect(lim);lim.connect(C.destination);
+    noise=C.createBuffer(1,C.sampleRate*2,C.sampleRate);const d=noise.getChannelData(0);let b=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;b=.97*b+.03*w;d[i]=w*.6+b*3;}
+    // crowd bed: two detuned noise loops through a low band, slowly breathing
+    crowdF=C.createBiquadFilter();crowdF.type='bandpass';crowdF.frequency.value=700;crowdF.Q.value=.6;crowdG=C.createGain();crowdG.gain.value=.05;crowdF.connect(crowdG);crowdG.connect(M);
+    for(const r of[1,.83]){const n=C.createBufferSource();n.buffer=noise;n.loop=true;n.playbackRate.value=r;n.connect(crowdF);n.start();}
+    (function breathe(){if(!C)return;const t=C.currentTime;excite*=.6;crowdG.gain.setTargetAtTime(.05+.012*Math.sin(t*.7)+excite,t,.8);setTimeout(breathe,700);})();}
+  const T=()=>C.currentTime;
+  function burst(dur,type,freq,q,gain,t0=0,rate=1){const t=T()+t0,n=C.createBufferSource();n.buffer=noise;n.playbackRate.value=rate;
+    const f=C.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;const g=C.createGain();
+    g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);n.connect(f);f.connect(g);g.connect(M);n.start(t,Math.random()*1.5);n.stop(t+dur+.02);return f;}
+  function tone(f0,f1,dur,gain,type='sine',t0=0){const t=T()+t0,o=C.createOscillator(),g=C.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);
+    o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(M);o.start(t);o.stop(t+dur+.02);}
+  const ok=()=>C&&!muted;
+  return{init,
+    get muted(){return muted;},
+    toggle(){muted=!muted;try{localStorage.setItem('theReal.muted',muted?'1':'0');}catch(e){}if(C)M.gain.setTargetAtTime(muted?0:.9,T(),.05);if(muted&&window.speechSynthesis)speechSynthesis.cancel();return muted;},
+    crack(p){if(!ok())return;p=clamp(p);  // wood bat: sharp click, ringing body, low thump
+      burst(.06+.05*p,'bandpass',2600+1400*p,1.2,.5+.6*p);tone(1300+500*p,700,.09+.06*p,.25+.25*p,'triangle');tone(220,90,.12,.35+.3*p);},
+    bunt(){if(!ok())return;burst(.05,'bandpass',1400,1.5,.35);tone(500,300,.06,.2,'triangle');},
+    swing(){if(!ok())return;const f=burst(.28,'bandpass',300,2.5,.25,0,.8);f.frequency.exponentialRampToValueAtTime(1500,T()+.18);},
+    mitt(p=.7){if(!ok())return;burst(.09,'lowpass',1300+900*p,.8,.6+.5*p);tone(160,70,.1,.5*p);},
+    glove(v=.5){if(!ok())return;burst(.07,'lowpass',1500,.8,.5*v);tone(150,80,.08,.3*v);},
+    thud(v=.5){if(!ok())return;burst(.12,'lowpass',500,.7,.6*v);tone(110,55,.14,.5*v);},
+    bounce(v){if(!ok())return;v=clamp(v);burst(.05+.05*v,'lowpass',700+600*v,.7,.25+.4*v);},
+    wall(){if(!ok())return;burst(.18,'lowpass',380,.6,.8);tone(90,50,.2,.5);},
+    cheer(level,dur=2.5){if(!C)return;excite=Math.max(excite,level*.35);crowdF.frequency.setTargetAtTime(700+900*level,T(),.15);crowdF.frequency.setTargetAtTime(700,T()+dur,1.2);
+      crowdG.gain.setTargetAtTime(.05+level*.35,T(),.12);},
+    groan(){if(!C)return;crowdF.frequency.setTargetAtTime(350,T(),.1);crowdF.frequency.setTargetAtTime(700,T()+1.2,.8);crowdG.gain.setTargetAtTime(.12,T(),.1);},
+    organ(){if(!ok())return;[392,523,659,784,659,784].forEach((f,i)=>{const d=i===5?.7:.16;for(const h of[1,2,4])tone(f*h,f*h*.999,d,.09/h,'square',i*.17);});},
+    say(txt){if(muted||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='en-US';u.rate=1.05;u.pitch=.7;u.volume=.9;speechSynthesis.speak(u);}};
+})();
+// umpire / announcer lines and crowd reactions, keyed by the English result label
+const CALLS={'STRIKE':['Strike!'],'SWING & MISS':['Strike!'],'BUNT MISSED':['Strike!'],'STRIKEOUT':['Strike three!',-1],'BALL':['Ball.'],'WALK':['Ball four!',.25],
+  'HIT BY PITCH':['Take your base!',-.3],'FOUL BALL':['Foul ball!',.3],'FLY OUT':['Out!',-1],'OUT':['Out!',-1],'GROUND OUT':['Out!',-1],'FORCE OUT':['Out!',-1],
+  'SINGLE':[null,.5],'DOUBLE':[null,.7],'TRIPLE':[null,.85],'INSIDE-THE-PARK HR':[null,1],'HOME RUN':[null,1],'SIDE RETIRED':['Side retired!']};
+function sayResult(small){const c=CALLS[small];if(!c)return;if(c[0])SFX.say(c[0]);if(c[1]===-1)SFX.groan();else if(c[1])SFX.cheer(c[1],c[1]>=1?5:2.5);if(small==='HOME RUN')SFX.organ();}
+function flash(big,small){sayResult(small);const m=$('msg');m.innerHTML=big+(small?`<small>${small}</small>`:'');m.classList.remove('show');void m.offsetWidth;m.classList.add('show');}
 function result(big,small,end){flash(big,small);state='result';resultUntil=now+1.7;abOver=end;
   if(pitch)$('pinfo').textContent=`${Math.round(pitch.kmh)} km/h · ${pitch.t.zh}`;hud();}
 function strikeCall(big,small){count.s++;if(count.s>=3){count.o++;result('三振出局','STRIKEOUT',true);}else result(big,small,false);}
@@ -598,7 +638,7 @@ function planCPU(p){const inZ=isStrike(p.T),meat=p.miss==='meat';
   if(Math.random()<cp){const w=meat?.4:.85;return{swing:true,contact:true,tn:(Math.random()*2-1)*w,xn:(Math.random()*2-1)*.6,yn:(Math.random()*2-1)*.8+(meat?.25:0)};}
   return{swing:true,contact:false,tn:(Math.random()<.5?-1:1)*(1.1+Math.random()*.8)};}
 
-function startSwing(p){if(p.state==='swing'&&now-p.t0<SWING_DUR*1.6)return false;p.state='swing';p.t0=now;return true;}
+function startSwing(p){if(p.state==='swing'&&now-p.t0<SWING_DUR*1.6)return false;p.state='swing';p.t0=now;SFX.swing();return true;}
 function onSwing(){if(state==='hit'||state==='result')return;bunting=false;if(!startSwing(batterP))return;
   if(pitch&&!pitch.resolved&&!pending)pending={tcon:now+CONTACT_T};}
 function resolveSwing(){const pd=pending;pending=null;if(!pitch||pitch.resolved)return;
@@ -614,7 +654,7 @@ function contact(tn,xn,yn){
   const la=10+yn*38+gauss()*4,spray=-tn*55+xn*6+gauss()*5;
   const v=(23+26*q)*(1-.4*Math.min(1,Math.abs(la-22)/70))+(pitch.sp-38)*.15;
   launch(v,la,spray,false);}
-function launch(spd,la,spray,bunt){pitch.resolved=true;state='hit';
+function launch(spd,la,spray,bunt){pitch.resolved=true;state='hit';if(bunt)SFX.bunt();else{SFX.crack((spd-18)/30);SFX.cheer(clamp((spd-25)/25)*.5,1.5);}
   const a=la*D2R,s=spray*D2R;ball.position.set(pitch.T.x,pitch.T.y,-.25);
   hb={v:V(spd*Math.cos(a)*Math.sin(s),spd*Math.sin(a),-spd*Math.cos(a)*Math.cos(s)),landed:false,hr:false,t0:now,spd,la,bunt,foul:false};
   trailN=0;trail.visible=true;$('pinfo').textContent=`${Math.round(pitch.kmh)} km/h · ${pitch.t.zh}`;
@@ -624,22 +664,22 @@ function groundH(x,z){const r=Math.hypot(x,z),th=Math.atan2(x,-z),a=Math.abs(th)
   if(a<=Math.PI/4){const w=rw(th);return r>w?WALL_H+(r-w)*.6:0;}
   const dp=a<Math.PI*.72?r*Math.sin(a-Math.PI/4):r;return dp>14.5?2.2+(dp-14.5)*.6:0;}
 // whole flight of a batted ball, computed up front so the defence can plan against it (same physics as before)
-function simBall(p0,v0,la){const p=p0.clone(),v=v0.clone(),S=[],h=1/240;let landed=false,hr=false,landT=null,hrT=null,landP=null;
+function simBall(p0,v0,la){const p=p0.clone(),v=v0.clone(),S=[],h=1/240,snd=[];let landed=false,hr=false,landT=null,hrT=null,landP=null;
   for(let i=0;i<240*12;i++){const t=i*h;if(i%4===0)S.push({t,p:p.clone(),air:!landed});
     const px=p.x,pz=p.z,g0=groundH(px,pz),sp=v.length(),K=.0052,lift=landed||la<6?0:.0013*sp*sp;
     v.x-=K*sp*v.x*h;v.z-=K*sp*v.z*h;v.y+=(-9.81-K*sp*v.y+lift)*h;p.addScaledVector(v,h);
     const r=Math.hypot(p.x,p.z),th=Math.atan2(p.x,-p.z),w=rw(th);
     if(!hr&&Math.abs(th)<=Math.PI/4&&r>=w&&r<w+1.5){
       if(p.y>WALL_H){hr=true;hrT=t;}
-      else{const nx=p.x/r,nz=p.z/r,vn=v.x*nx+v.z*nz;if(vn>0){v.x-=1.4*vn*nx;v.z-=1.4*vn*nz;}p.x-=nx*(r-w+.05);p.z-=nz*(r-w+.05);}}
+      else{const nx=p.x/r,nz=p.z/r,vn=v.x*nx+v.z*nz;if(vn>0){v.x-=1.4*vn*nx;v.z-=1.4*vn*nz;snd.push({t,k:'wall'});}p.x-=nx*(r-w+.05);p.z-=nz*(r-w+.05);}}
     let g=groundH(p.x,p.z);
     if(g>g0+.3&&p.y<g-.2){p.x=px;p.z=pz;v.x*=-.45;v.z*=-.45;g=g0;}
     if(p.y<=g+BR){p.y=g+BR;if(!landed){landed=true;landT=t+h;landP=p.clone();}
-      const soft=g>0,vy=-v.y;if(vy>1.2){v.y=vy*(soft?.3:.45);const f=soft?.55:.8;v.x*=f;v.z*=f;}else v.y=0;}
+      const soft=g>0,vy=-v.y;if(vy>1.2){snd.push({t,k:'bounce',v:vy/20});v.y=vy*(soft?.3:.45);const f=soft?.55:.8;v.x*=f;v.z*=f;}else v.y=0;}
     if(landed&&p.y<=g+BR+.002&&v.y===0){const hs=Math.hypot(v.x,v.z);if(hs>0){const d=Math.min(hs,(g>0?6:2.2)*h)/hs;v.x-=v.x*d;v.z-=v.z*d;}
       if(hs<.15){S.push({t:t+h,p:p.clone(),air:false});break;}}}
   if(!landP)landP=p.clone();
-  return {S,hr,hrT,landT:landT??S[S.length-1].t,landP,foul:!hr&&Math.abs(Math.atan2(landP.x,-landP.z))>Math.PI/4,end:S[S.length-1].t};}
+  return {S,snd,hr,hrT,landT:landT??S[S.length-1].t,landP,foul:!hr&&Math.abs(Math.atan2(landP.x,-landP.z))>Math.PI/4,end:S[S.length-1].t};}
 function samplePath(S,t,o){const i=clamp(Math.floor(t*60),0,S.length-2);return o.lerpVectors(S[i].p,S[i+1].p,clamp((t-S[i].t)*60));}
 
 function showPitch(p){const e=$('speed');e.innerHTML=`<b>${Math.round(p.kmh)}</b>km/h<i style="color:${p.t.c}">${p.t.zh} · ${p.t.en}</i>`;
@@ -653,8 +693,8 @@ function setMode(m){if(play&&!play.ended)finishPlay(true);mode=m;count.b=count.s
   $('modeTag').textContent=m==='bat'?'打擊模式 BATTING':'投球模式 PITCHING';$('modeTag').style.background=m==='bat'?'#d9481c':'#1c7bd9';
   $('modeBtn').textContent=m==='bat'?'切換到 投球模式 (M)':'切換到 打擊模式 (M)';
   $('pitchList').style.display=$('meterBox').style.display=m==='pitch'?'':'none';
-  $('help').innerHTML=(m==='bat'?[['移動滑鼠','移動球棒打擊區'],['左鍵','揮棒 Swing'],['右鍵','觸擊姿勢 Bunt'],['A / D','觸擊方向'],['M','切換投球模式']]
-    :[['1 – 5','選擇球種'],['移動滑鼠','選擇進壘位置'],['按住左鍵','蓄力，放開投球'],['紅色區域','失投！(紅中/觸身)'],['R','休息，回復體力'],['M','切換打擊模式']])
+  $('help').innerHTML=(m==='bat'?[['移動滑鼠','移動球棒打擊區'],['左鍵','揮棒 Swing'],['右鍵','觸擊姿勢 Bunt'],['A / D','觸擊方向'],['M','切換投球模式'],['N','音效開關 Sound']]
+    :[['1 – 5','選擇球種'],['移動滑鼠','選擇進壘位置'],['按住左鍵','蓄力，放開投球'],['紅色區域','失投！(紅中/觸身)'],['R','休息，回復體力'],['M','切換打擊模式'],['N','音效開關 Sound']])
     .map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('');
   camSnap=true;hud();}
 
@@ -672,13 +712,14 @@ function hud(){const dots=(n,max,c)=>Array.from({length:max},(_,i)=>`<i class="$
 // ---------- input ----------
 const cv=renderer.domElement;
 addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;});
-cv.addEventListener('mousedown',e=>{
+cv.addEventListener('mousedown',e=>{SFX.init();
   if(state==='hit'&&play&&!play.ended&&e.button===0){finishPlay();return;}
   if(mode==='bat'){if(e.button===0)onSwing();else if(e.button===2&&state!=='hit'&&state!=='result'&&batterP.state!=='swing')bunting=!bunting;}
   else if(e.button===0&&state==='ready'){charging=true;meter=0;}});
 addEventListener('mouseup',e=>{if(e.button===0&&mode==='pitch'&&charging)throwPitch(false);});
 addEventListener('contextmenu',e=>e.preventDefault());
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;SFX.init();
+  if(k==='n'){flash(SFX.toggle()?'靜音':'音效開啟',SFX.muted?'SOUND OFF':'SOUND ON');}
   if(k==='m')setMode(mode==='bat'?'pitch':'bat');
   if(k>='1'&&k<='5'&&mode==='pitch'&&!charging){selType=+k-1;hud();}
   if(k==='r'&&mode==='pitch'){pitchCount=0;hud();flash('休息','STAMINA RESTORED');}});
@@ -800,6 +841,9 @@ const _g1=V(),_g2=V();
 function gloveW(p,o){return p.g.localToWorld(o.copy(p.gripL||p.buf.lHa));}
 function updatePlay(dt){const P=play,pt=now-P.t0;
   for(const e of P.ev)if(!e.done&&pt>=e.t){e.done=true;e.fn();}
+  for(const e of P.sim.snd)if(!e.done&&pt>=e.t){e.done=true;if(!(P.F&&pt>=P.tf))e.k==='wall'?SFX.wall():SFX.bounce(e.v);}
+  if(P.F&&!P.sF&&pt>=P.tf){P.sF=1;SFX.glove(.6);}
+  if(P.F&&!P.sT&&pt>=P.arrT&&P.arrT>P.relT){P.sT=1;SFX.glove(.7);}
   if(P.F&&pt>=P.tf){
     if(pt<P.relT){if(pt<P.tf+.35)gloveW(P.F.p,ball.position);else P.F.p.g.localToWorld(ball.position.copy(P.F.p.gripR||P.F.p.buf.rHa));}
     else{if(!P.relPt)P.relPt=ball.position.clone();const u=clamp((pt-P.relT)/(P.arrT-P.relT));
@@ -837,7 +881,7 @@ function animPlay(dt){const P=play,pt=now-P.t0;
     along(r.path,dd,p.g.position);const moving=pt<tEnd&&pt>r.start;
     if(moving){const ahead=along(r.path,Math.min(L,dd+.5),_g1);turnTo(p,Math.atan2(ahead.x-p.g.position.x,ahead.z-p.g.position.z),dt);}
     poseKey(p,moving?'run':'stand',.2);if(moving)runPose(b,dd,r.spd);else{lerpPose(READY,READY,0,b);b._m=0;fillAux(b);}blendIn(p);setPose(p,b);
-    if(r.target===4&&!r.out&&pt>=tEnd&&!r.scored){r.scored=true;runs++;hud();}
+    if(r.target===4&&!r.out&&pt>=tEnd&&!r.scored){r.scored=true;runs++;hud();SFX.cheer(.7,2);}
     if((r.out||r.scored)&&pt>tEnd+1.2){p.g.visible=false;r.hidden=true;}}}
 function finishPlay(silent){const P=play;if(!P||P.ended)return;P.ended=true;
   if(!P.foul){count.o+=P.outs;const nb=[null,null,null,null];let bb=0;
@@ -850,19 +894,17 @@ function finishPlay(silent){const P=play;if(!P||P.ended)return;P.ended=true;
   if(silent)return;if(P.foul){if(count.s<2)count.s++;readyPitch();}else newAB();}
 
 // ---------- camera ----------
-const camPos=V(),camLook=V(),camGoal=V(),lookGoal=V(),camFrom=V(),lookFrom=V();let camSnap=true,camHit=false,camT0=-9,fovFrom=40;
-const CAM_BACK=1.6,CAM_VMAX=14,_cv=V(); // seconds to glide back to the batting/pitching view after a play
+const camPos=V(),camLook=V(),camGoal=V(),lookGoal=V();let camSnap=true,camHit=false;
+const CAM_VMAX=14,_cv=V(); // seconds to glide back to the batting/pitching view after a play
 function updateCamera(dt){
   const hit=state==='hit'&&!!hb;
-  if(camHit&&!hit){camFrom.copy(camPos);lookFrom.copy(camLook);fovFrom=camera.fov;camT0=now;}camHit=hit;
+  if(camHit&&!hit)camSnap=true;camHit=hit;  // positions after a play could be anywhere: cut, don't glide
   let fov;
   if(hit){const b=ball.position,d=V(b.x,0,b.z);if(d.length()<1)d.set(0,0,-1);d.normalize();   // stay on the ball, through the catch and the throw
     camGoal.set(b.x-d.x*18,Math.max(5,b.y*.6+5),b.z-d.z*18);if(camGoal.z>9)camGoal.z=9;lookGoal.copy(b);fov=50;}
   else if(mode==='bat'){camGoal.set(.3,1.25,3.9);lookGoal.set(0,1.0,-18);fov=38;}
   else{camGoal.set(PCAM.x,PCAM.y,PCAM.z);lookGoal.copy(PLOOK);fov=PFOV;}  // far behind the (offset) pitcher, long lens
-  const back=!hit&&now-camT0<CAM_BACK;
   if(camSnap){camPos.copy(camGoal);camLook.copy(lookGoal);camera.fov=fov;camSnap=false;}
-  else if(back){const u=smooth(clamp((now-camT0)/CAM_BACK));camPos.lerpVectors(camFrom,camGoal,u);camLook.lerpVectors(lookFrom,lookGoal,u);camera.fov=fovFrom+(fov-fovFrom)*u;}
   else{const k=1-Math.exp(-(hit?2.2:5)*dt),kl=1-Math.exp(-(hit?8:9)*dt);
     if(hit){_cv.subVectors(camGoal,camPos).multiplyScalar(k);const mx=CAM_VMAX*dt;if(_cv.length()>mx)_cv.setLength(mx);camPos.add(_cv);}  // no lunges: speed-capped glide
     else camPos.lerp(camGoal,k);camLook.lerp(lookGoal,kl);camera.fov+=(fov-camera.fov)*Math.min(1,dt*(hit?5:4));}
@@ -889,6 +931,7 @@ function update(dt){now+=dt;
     if(pitcherP.ballPt){pitch.P0.copy(pitcherP.ballPt);pitcherP.g.localToWorld(pitch.P0);pitch.dur=Math.max(.5,(pitch.P0.distanceTo(pitch.T)+(mode==='pitch'?PITCH_OFF:0))/pitch.sp*1.3);pitch.tArr=pitch.tRel+pitch.dur;}
     if(mode==='pitch'){cpuPlan=planCPU(pitch);if(cpuPlan.swing)pending={cpu:true,plan:cpuPlan,tcon:pitch.tArr-cpuPlan.tn*.075};}}
   if(pitch&&(state==='flight'||(state==='result'&&!pitch.hitBall))){const u=(now-pitch.tRel)/pitch.dur;
+    if(!pitch.popped&&u>=1&&!pitch.hitBall&&state!=='hit'){pitch.popped=true;isHBP(pitch.T)?SFX.thud(.7):SFX.mitt(clamp((pitch.kmh-110)/45));}
     pitchPos(pitch,u,ball.position);
     if(mode==='pitch'&&ball.position.z>.55)pitchPos(pitch,1+.55/(-pitch.P0.z),ball.position);
     ball.visible=ball.position.z<3;
