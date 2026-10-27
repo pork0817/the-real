@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>棒球 The Real</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;color:#fff;user-select:none}
+canvas{display:block;cursor:crosshair}
+.panel{position:absolute;background:rgba(10,16,28,.78);border:1px solid rgba(255,255,255,.12);border-radius:8px;backdrop-filter:blur(4px)}
+#top{top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;padding:6px 16px;font-size:14px;white-space:nowrap}
+#modeTag{font-weight:700;padding:3px 10px;border-radius:5px;background:#d9481c}
+.cnt{display:flex;align-items:center;gap:4px;font-weight:700}
+.cnt b{margin-left:8px;width:12px}
+.cnt i{width:11px;height:11px;border-radius:50%;background:#333a46;display:inline-block}
+.cnt i.on.b{background:#3fd36b}.cnt i.on.s{background:#ffd23a}.cnt i.on.o{background:#ff4141}
+#pinfo{color:#9fd3ff;min-width:150px}
+#side{top:10px;right:10px;width:240px;padding:12px;font-size:12.5px;line-height:1.65}
+#side h1{font-size:17px;margin:0 0 8px;letter-spacing:.5px}
+#side button,#pitchList button{font:inherit;cursor:pointer;border:0;border-radius:6px;color:#fff}
+#modeBtn{width:100%;padding:8px;background:#e8641f;font-weight:700;margin-bottom:8px}
+#help div{display:flex;gap:8px}#help span:first-child{color:#ffb070;min-width:78px}
+#msg{position:absolute;top:30%;left:0;right:0;text-align:center;font-size:56px;font-weight:900;text-shadow:0 4px 18px rgba(0,0,0,.7);pointer-events:none;opacity:0}
+#msg small{display:block;font-size:22px;font-weight:600;letter-spacing:2px;margin-top:4px}
+#msg.show{animation:pop 2.6s ease forwards}
+@keyframes pop{0%{opacity:0;transform:scale(1.4)}10%{opacity:1;transform:scale(1)}75%{opacity:1}100%{opacity:0}}
+#speed{top:12px;left:14px;padding:8px 14px 9px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap;min-width:120px}
+#speed b{font-size:30px;font-variant-numeric:tabular-nums;margin-right:4px;line-height:1.1}#speed i{display:block;font-style:normal;font-weight:700;margin-top:2px}
+#pinfo{display:none}#cards{display:none!important}
+#hitBox{right:10px;top:250px;width:214px;padding:10px 14px;font-size:12.5px;display:none;pointer-events:none}
+#hitBox h3{margin:0 0 6px;font-size:16px;color:#ffd23a}#hitBox div{display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid #ffffff14}
+#hitBox b{font-variant-numeric:tabular-nums;font-size:14px}
+#speed.show{opacity:1}
+#hitInfo{position:absolute;top:calc(30% + 100px);left:0;right:0;text-align:center;font-size:18px;color:#ffe7a8;text-shadow:0 2px 8px #000;pointer-events:none}
+#pitchList{bottom:16px;left:12px;padding:8px;display:flex;flex-direction:column;gap:6px}
+#pitchList button{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#253044;min-width:170px;text-align:left}
+#pitchList button.sel{outline:2px solid #fff;background:#3b4b6a}
+#pitchList kbd{background:#0008;border-radius:4px;padding:0 6px;font-family:inherit}
+#pitchList .dot{width:10px;height:10px;border-radius:50%}
+#meterBox{bottom:22px;left:50%;transform:translateX(-50%);padding:10px 14px;width:360px;font-size:12px}
+#meter{position:relative;height:18px;background:#1b2230;border-radius:4px;overflow:hidden;margin-top:6px}
+#mFill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#3fd36b,#ffd23a)}
+#mRed{position:absolute;right:0;top:0;bottom:0;background:repeating-linear-gradient(45deg,#c0262699,#c0262699 6px,#ff3b3baa 6px,#ff3b3baa 12px)}
+#buntBox{bottom:22px;left:50%;transform:translateX(-50%);padding:8px 16px;font-size:14px;display:none}
+#buntBox span{display:inline-block;width:26px;text-align:center;opacity:.3}#buntBox span.on{opacity:1;color:#ffb070;font-weight:900}
+#cards{bottom:12px;right:10px;display:flex;font-size:13px}
+#cards div{padding:6px 12px;min-width:150px}#cards div+div{border-left:1px solid #fff2}
+#cards em{font-style:normal;color:#ffb070;font-weight:700;margin-right:6px}
+#stam{height:6px;background:#1b2230;border-radius:3px;margin-top:4px;overflow:hidden}#stamFill{height:100%;background:#3fd36b}
+</style>
+</head>
+<body>
+<div id="top" class="panel"><span id="modeTag">打擊模式 BATTING</span><div class="cnt" id="cnt"></div><span id="pinfo">—</span></div>
+<div id="side" class="panel">
+  <h1>棒球 The Real</h1>
+  <button id="modeBtn">切換到 投球模式 (M)</button>
+  <div id="help"></div>
+</div>
+<div id="speed" class="panel"></div><div id="msg"></div><div id="hitBox" class="panel"><h3 id="hbRes">擊球中…</h3><div><span>擊球初速 Exit velo</span><b id="hbExit"></b></div><div><span>仰角 Launch angle</span><b id="hbLa"></b></div><div><span>飛行距離 Distance</span><b id="hbDist"></b></div></div>
+<div id="pitchList" class="panel"></div>
+<div id="meterBox" class="panel"><div style="display:flex;justify-content:space-between"><span>投球力道 POWER（按住左鍵）</span><span id="mTxt"></span></div><div id="meter"><div id="mFill"></div><div id="mRed"></div></div></div>
+<div id="buntBox" class="panel">觸擊方向 BUNT &nbsp;<span id="bL">◀ A</span><span id="bC">●</span><span id="bR">D ▶</span></div>
+<div id="cards" class="panel"><div><em id="bNum"></em><span id="bName"></span><br><small>打者 BATTER</small></div><div><em>#18</em>陳柏翰<br><small>投手 PITCHER · <span id="pc">0</span> 球</small><div id="stam"><div id="stamFill"></div></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="mocap/clips.js"></script>
+<script src="models/male.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const smooth=t=>t*t*(3-2*t);
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const D2R=Math.PI/180, BR=0.037, WALL_H=3.2, UP=V(0,1,0);
+const rw=t=>99+23*Math.cos(2*clamp(t,-Math.PI/4,Math.PI/4)); // outfield wall radius by spray angle
+
+// ---------- renderer / scene ----------
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+document.body.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.05,2000);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
+const mat=(c,r=0.8,m=0)=>{const x=new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});x.color.convertSRGBToLinear();return x;};
+
+scene.background=canvasTex(4,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#2f6fc8');gr.addColorStop(.55,'#8dbbe8');gr.addColorStop(1,'#e2eef8');g.fillStyle=gr;g.fillRect(0,0,w,h);});
+scene.fog=new THREE.Fog(0xc9dcef,260,900);
+scene.add(new THREE.HemisphereLight(0xe4f0ff,0x50703a,0.45));
+{const pm=new THREE.PMREMGenerator(renderer),es=new THREE.Scene();
+ es.add(new THREE.Mesh(new THREE.SphereGeometry(10,32,16),new THREE.MeshBasicMaterial({side:THREE.BackSide,map:canvasTex(4,256,(g,w,h)=>{
+   const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#4f86d0');gr.addColorStop(.46,'#dfeaf6');gr.addColorStop(.54,'#8fa577');gr.addColorStop(1,'#3e5a2c');g.fillStyle=gr;g.fillRect(0,0,w,h);})})));
+ scene.environment=pm.fromScene(es,.04).texture;}
+const sun=new THREE.DirectionalLight(0xfff1dc,1.7);sun.position.set(-35,70,25);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-26,right:26,top:26,bottom:-26,near:10,far:160});sun.shadow.bias=-0.0004;
+sun.target.position.set(0,0,-10);scene.add(sun,sun.target);
+
+// ---------- field ----------
+const fieldTex=canvasTex(2048,2048,(g,S)=>{
+  const sc=S/300,X=x=>(x+150)*sc,Z=z=>(z+210)*sc;
+  g.fillStyle='#3d7c32';g.fillRect(0,0,S,S);
+  g.save();g.translate(X(0),Z(0));g.rotate(Math.PI/4);
+  for(let i=-50;i<50;i++){g.fillStyle=i%2?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)';g.fillRect(i*6*sc,-S*2,6*sc,S*4);}
+  for(let i=-50;i<50;i++){g.fillStyle=i%2?'rgba(255,255,255,.035)':'rgba(0,0,0,.035)';g.fillRect(-S*2,i*6*sc,S*4,6*sc);}
+  g.restore();
+  const dirt='#b37b4f';
+  g.fillStyle='#a06d47';g.beginPath();
+  for(let a=-47;a<=47;a++){const t=a*D2R,r=rw(t)+3;g.lineTo(X(r*Math.sin(t)),Z(-r*Math.cos(t)));}
+  for(let a=47;a>=-47;a--){const t=a*D2R,r=rw(t)-4.5;g.lineTo(X(r*Math.sin(t)),Z(-r*Math.cos(t)));}
+  g.closePath();g.fill();
+  g.save();g.beginPath();g.moveTo(X(0),Z(5));g.lineTo(X(-92),Z(-87));g.lineTo(X(92),Z(-87));g.closePath();g.clip();
+  g.fillStyle=dirt;g.beginPath();g.arc(X(0),Z(-18.4),29*sc,0,7);g.fill();g.restore();
+  g.fillStyle='#438836';g.beginPath();[[0,-1.3],[18.1,-19.4],[0,-37.5],[-18.1,-19.4]].forEach(([x,z])=>g.lineTo(X(x),Z(z)));g.fill();
+  const circ=(x,z,r)=>{g.beginPath();g.arc(X(x),Z(z),r*sc,0,7);g.fill();};
+  g.fillStyle=dirt;circ(0,0.3,4.2);circ(19.4,-19.4,2.74);circ(0,-38.8,2.74);circ(-19.4,-19.4,2.74);circ(0,-18.44,2.9);
+  g.strokeStyle='#f5f5f0';g.lineWidth=2.4;
+  for(const s of[-1,1]){g.beginPath();g.moveTo(X(0),Z(0));g.lineTo(X(s*70),Z(-70));g.stroke();}
+  for(let i=0;i<70000;i++){g.fillStyle=Math.random()<.5?'rgba(0,0,0,.07)':'rgba(255,255,255,.05)';g.fillRect(Math.random()*S,Math.random()*S,1.6,1.6);}
+});
+const field=new THREE.Mesh(new THREE.PlaneGeometry(300,300),new THREE.MeshStandardMaterial({map:fieldTex,roughness:.95}));
+field.rotation.x=-Math.PI/2;field.position.z=-60;field.receiveShadow=true;scene.add(field);
+const outer=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),mat(0x46553a,1));outer.rotation.x=-Math.PI/2;outer.position.y=-0.05;scene.add(outer);
+const dirtMat=mat(0xb37b4f,1),white=mat(0xf4f4ef,.6);
+const mound=new THREE.Mesh(new THREE.CylinderGeometry(1.1,2.9,0.25,40),dirtMat);mound.position.set(0,0.125,-18.44);mound.receiveShadow=true;scene.add(mound);
+const box=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.receiveShadow=true;scene.add(o);return o;};
+box(0.61,0.04,0.15,white,0,0.27,-18.44);
+[[19.4,-19.4],[0,-38.8],[-19.4,-19.4]].forEach(([x,z])=>{const b=box(0.38,0.08,0.38,white,x,0.04,z);b.rotation.y=Math.PI/4;});
+{const s=new THREE.Shape();s.moveTo(-.216,0);s.lineTo(.216,0);s.lineTo(.216,.216);s.lineTo(0,.432);s.lineTo(-.216,.216);s.closePath();
+ const hp=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.02,bevelEnabled:false}),white);hp.rotation.x=Math.PI/2;hp.position.y=.022;hp.receiveShadow=true;scene.add(hp);}
+for(const sx of[-1,1]){const x0=sx*.37,x1=sx*1.59,zc=.2;
+  box(.06,.01,1.83,white,x0,.006,zc);box(.06,.01,1.83,white,x1,.006,zc);box(1.22,.01,.06,white,(x0+x1)/2,.006,zc-.915);box(1.22,.01,.06,white,(x0+x1)/2,.006,zc+.915);}
+
+// ---------- stands ----------
+const crowdTex=canvasTex(512,512,(g,w,h)=>{g.fillStyle='#283040';g.fillRect(0,0,w,h);const rows=16,rh=h/rows;
+  const skin=['#f1c7a0','#c58c62','#8a5a3b','#e8b48a'];
+  for(let r=0;r<rows;r++){g.fillStyle='#3e4757';g.fillRect(0,r*rh+rh*.72,w,rh*.28);
+    for(let x=0;x<w;x+=5+Math.random()*3){if(Math.random()<.14)continue;
+      g.fillStyle=`hsl(${Math.random()*360|0},${30+Math.random()*55|0}%,${22+Math.random()*30|0}%)`;g.fillRect(x,r*rh+rh*.36,4.2,rh*.42);
+      g.fillStyle=skin[Math.random()*4|0];g.beginPath();g.arc(x+2.1,r*rh+rh*.28,2.1,0,7);g.fill();}}});
+crowdTex.wrapS=crowdTex.wrapT=THREE.RepeatWrapping;
+const adTex=canvasTex(1024,64,(g,w,h)=>{const ads=[['#0d3b66','#ffd23a','STRIKE COLA'],['#1d6e3a','#fff','NOVA BANK'],['#b3202a','#fff','SUNRISE AIR'],['#222','#ff8a1f','PIXEL GAMES']];
+  ads.forEach(([bg,fg,t],i)=>{g.fillStyle=bg;g.fillRect(i*256,0,256,h);g.fillStyle=fg;g.font='bold 30px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(t,i*256+128,h/2+2);});
+  g.fillStyle='#ffd23a';g.fillRect(0,0,w,4);});
+adTex.wrapS=THREE.RepeatWrapping;
+(function buildStands(){
+  const pts=[],s=Math.SQRT1_2;
+  for(let a=-45;a<=45;a+=2.5){const t=a*D2R;pts.push([rw(t)*Math.sin(t),-rw(t)*Math.cos(t),WALL_H]);}
+  pts.push([70+14*s,-70+14*s,2.2]);
+  const R=Math.hypot(14*s+4*s,14*s-4*s);
+  for(let f=Math.atan2(14*s-4*s,14*s+4*s);f<=Math.PI-Math.atan2(14*s-4*s,14*s+4*s)+1e-6;f+=Math.PI/24)pts.push([R*Math.cos(f),R*Math.sin(f),2.2]);
+  pts.push([-70-14*s,-70+14*s,2.2]);
+  const n=pts.length,K=14,DEP=40,RISE=24,nor=[];
+  for(let i=0;i<n;i++){const p=pts[(i-1+n)%n],q=pts[(i+1)%n];const tx=q[0]-p[0],tz=q[1]-p[1],l=Math.hypot(tx,tz);nor.push([tz/l,-tx/l]);}
+  const sp=[],su=[],wp=[],wu=[],bp=[];let cum=0;
+  for(let i=0;i<=n;i++){const k=i%n,[x,z,h]=pts[k],[nx,nz]=nor[k];if(i>0){const pr=pts[(i-1)%n];cum+=Math.hypot(x-pr[0],z-pr[1]);}
+    for(let r=0;r<=K;r++){const o=.5+r*DEP/K;sp.push(x+nx*o,h+r*RISE/K,z+nz*o);su.push(cum/42,r/K*2.4);}
+    wp.push(x,0,z,x,h,z);wu.push(cum/26,0,cum/26,1);
+    bp.push(x+nx*(DEP+.5),h+RISE,z+nz*(DEP+.5),x+nx*(DEP+.5),0,z+nz*(DEP+.5));}
+  const mk=(pos,uv,cols,m)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    if(uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));const idx=[];
+    for(let i=0;i<n;i++)for(let r=0;r<cols-1;r++){const a=i*cols+r,b=(i+1)*cols+r;idx.push(a,b,a+1,b,b+1,a+1);}
+    g.setIndex(idx);g.computeVertexNormals();const o=new THREE.Mesh(g,m);o.receiveShadow=true;scene.add(o);};
+  mk(sp,su,K+1,new THREE.MeshLambertMaterial({map:crowdTex,color:0x9a9a9a,side:THREE.DoubleSide}));
+  mk(wp,wu,2,new THREE.MeshLambertMaterial({map:adTex,side:THREE.DoubleSide}));
+  mk(bp,null,2,new THREE.MeshLambertMaterial({color:0x30353d,side:THREE.DoubleSide}));
+  // light towers
+  const pole=mat(0x8a9099,.5,.6),lampTex=canvasTex(128,64,(g,w,h)=>{g.fillStyle='#333';g.fillRect(0,0,w,h);for(let y=4;y<h;y+=12)for(let x=4;x<w;x+=12){g.fillStyle='#fffbe8';g.fillRect(x,y,9,9);}});
+  [6,n-31,22,n-15].forEach(i=>{const k=((i%n)+n)%n,[x,z,h]=pts[k],[nx,nz]=nor[k],px=x+nx*44,pz=z+nz*44;
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(.6,.9,58,10),pole);c.position.set(px,29,pz);scene.add(c);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(12,6,1),[pole,pole,pole,pole,new THREE.MeshBasicMaterial({map:lampTex}),pole]);
+    head.position.set(px,60,pz);head.lookAt(0,10,-30);scene.add(head);});
+  // scoreboard
+  const sbTex=canvasTex(1024,400,(g,w,h)=>{g.fillStyle='#0b1220';g.fillRect(0,0,w,h);g.strokeStyle='#ffd23a';g.lineWidth=8;g.strokeRect(4,4,w-8,h-8);
+    g.fillStyle='#fff';g.font='bold 92px system-ui';g.textAlign='center';g.fillText('棒球 THE REAL',w/2,120);
+    g.font='bold 40px monospace';g.fillStyle='#9fd3ff';g.fillText('1 2 3 4 5 6 7 8 9   R  H  E',w/2+40,230);
+    g.fillStyle='#ffd23a';g.fillText('HAWKS  0 0 0 0 0 0 0 0 0   0  0  0',w/2,290);g.fillText('COMETS 0 0 0 0 0 0 0 0 0   0  0  0',w/2,350);});
+  const sb=new THREE.Mesh(new THREE.PlaneGeometry(40,15.6),new THREE.MeshBasicMaterial({map:sbTex}));sb.position.set(0,38,-163);scene.add(sb);
+  const sbBack=new THREE.Mesh(new THREE.BoxGeometry(42,17.6,1.5),mat(0x20262e));sbBack.position.set(0,38,-163.9);scene.add(sbBack);
+  for(const sx of[-1,1]){const fp=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,26,8),mat(0xffd23a,.5));fp.position.set(sx*70.3,13,-70.3);scene.add(fp);}
+})();
+
+// ---------- players (procedural skeleton) ----------
+const STAND={head:[0,1.68,.02],neck:[0,1.5,0],lSh:[.2,1.44,0],rSh:[-.2,1.44,0],lEl:[.24,1.16,-.02],rEl:[-.24,1.16,-.02],lHa:[.26,.9,.04],rHa:[-.26,.9,.04],
+  pelv:[0,.98,0],lHip:[.1,.94,0],rHip:[-.1,.94,0],lKn:[.11,.52,.03],rKn:[-.11,.52,.03],lFt:[.12,.05,0],rFt:[-.12,.05,0],bat:[0,1,0],chest:[0,1.25,0],lToe:[.12,.01,.16],rToe:[-.12,.01,.16]};
+const mk=(...os)=>{const r={};for(const o of os)for(const k in o)r[k]=V(...o[k]);return r;};
+const A=(...os)=>Object.assign({},...os);
+function lerpPose(a,b,t,out){for(const k in out)if(a[k]&&b[k]&&out[k].isVector3)out[k].lerpVectors(a[k],b[k],t);}
+function keyInterp(K,T,t,out){let i=0;while(i<T.length-2&&t>T[i+1])i++;
+  const s=clamp((t-T[i])/(T[i+1]-T[i])),s2=s*s,s3=s2*s,A=K[Math.max(0,i-1)],B=K[i],C=K[i+1],D=K[Math.min(K.length-1,i+2)];
+  for(const k in out){const b=B[k],c=C[k];if(!b||!c)continue;const a=A[k]||b,d=D[k]||c,o=out[k];
+    o.x=.5*(2*b.x+(c.x-a.x)*s+(2*a.x-5*b.x+4*c.x-d.x)*s2+(3*b.x-a.x-3*c.x+d.x)*s3);
+    o.y=.5*(2*b.y+(c.y-a.y)*s+(2*a.y-5*b.y+4*c.y-d.y)*s2+(3*b.y-a.y-3*c.y+d.y)*s3);
+    o.z=.5*(2*b.z+(c.z-a.z)*s+(2*a.z-5*b.z+4*c.z-d.z)*s2+(3*b.z-a.z-3*c.z+d.z)*s3);}}
+
+const numTex=(num,name,bg,fg)=>canvasTex(128,256,(g,w,h)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.fillStyle=fg;g.textAlign='center';
+  g.font='bold 26px "PingFang TC",sans-serif';g.fillText(name,w/2,44);g.font='bold 120px Impact,Arial Black,sans-serif';g.fillText(num,w/2,180);});
+
+// ---------- motion capture (CMU subject 124, converted by tools/amc2json.py) ----------
+const CLIPS={};for(const k in (window.MOCAP||{})){const c=window.MOCAP[k];c.dur=(c.n-1)*c.dt;CLIPS[k]=c;}
+if(!CLIPS.swing)console.error('mocap/clips.js missing: run tools/amc2json.py');
+function sampleClip(c,t,out){const ft=clamp(t/c.dt,0,c.n-1),i=Math.min(c.n-2,Math.floor(ft)),s=ft-i,J=c.J.length,f=c.f;
+  for(let k=0;k<J;k++){const o=out[c.J[k]]||(out[c.J[k]]=V()),a=(i*J+k)*3,b=a+J*3;
+    o.set(f[a]+(f[b]-f[a])*s,f[a+1]+(f[b+1]-f[a+1])*s,f[a+2]+(f[b+2]-f[a+2])*s);}
+  if(c.bat){const B=c.bat,a=i*3,b=a+3,o=out.bat||(out.bat=V());o.set(B[a]+(B[b]-B[a])*s,B[a+1]+(B[b+1]-B[a+1])*s,B[a+2]+(B[b+2]-B[a+2])*s);}
+  out._m=1;return out;}
+// line the pitch up along the stride (pivot foot at the start -> landing foot at release) so the delivery heads straight at home
+if(CLIPS.pitch){const c=CLIPS.pitch,a=sampleClip(c,0,{}),b=sampleClip(c,c.ev.release,{}),th=-Math.atan2(b.lFt.x-a.rFt.x,b.lFt.z-a.rFt.z),cs=Math.cos(th),sn=Math.sin(th);
+  for(let i=0;i<c.f.length;i+=3){const x=c.f[i]-a.rFt.x,z=c.f[i+2]-a.rFt.z;c.f[i]=x*cs+z*sn;c.f[i+2]=-x*sn+z*cs;}}
+// Limb lengths are fixed (measured from the mocap actor); elbows/knees are solved with 2-bone IK so limbs never stretch.
+const LEN={ua:.29,fa:.27,th:.445,sh:.45};
+if(CLIPS.swing){const d=sampleClip(CLIPS.swing,0,{}),L=(a,b)=>d[a].distanceTo(d[b]);
+  LEN.ua=(L('lSh','lEl')+L('rSh','rEl'))/2;LEN.fa=(L('lEl','lHa')+L('rEl','rHa'))/2;LEN.th=(L('lHip','lKn')+L('rHip','rKn'))/2;LEN.sh=(L('lKn','lFt')+L('rKn','rFt'))/2;}
+const lathe=(pts,seg=16)=>new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg);
+const fabricBump=canvasTex(256,256,(g,w,h)=>{const d=g.createImageData(w,h);for(let i=0;i<d.data.length;i+=4){const x=(i/4)%w,v=128+(Math.random()-.5)*50+(x%4<2?14:-14);d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}g.putImageData(d,0,0);});
+fabricBump.encoding=THREE.LinearEncoding;fabricBump.wrapS=fabricBump.wrapT=THREE.RepeatWrapping;fabricBump.repeat.set(8,8);
+const pinTex=canvasTex(256,32,(g,w,h)=>{g.fillStyle='#f3f2ec';g.fillRect(0,0,w,h);g.fillStyle='rgba(28,38,90,.5)';for(let x=0;x<w;x+=16)g.fillRect(x,0,1.6,h);});
+pinTex.wrapS=pinTex.wrapT=THREE.RepeatWrapping;pinTex.repeat.set(2,1);
+function cloth(c,o){const m=mat(c,.88);m.bumpMap=fabricBump;m.bumpScale=.0012;if(o&&o.pin){m.map=pinTex;m.color.set(0xffffff);}return m;}
+const chestTex=(txt,fg)=>canvasTex(256,96,(g,w,h)=>{g.fillStyle=fg;g.font='italic bold 64px Georgia,serif';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,w/2,h/2+4);});
+const BAT_PROFILE=[[0,0],[.03,0],[.031,.008],[.026,.018],[.014,.03],[.0125,.06],[.0125,.3],[.016,.42],[.024,.52],[.031,.62],[.0335,.7],[.0335,.84],[.031,.855],[0,.86]];
+const batTex=canvasTex(128,512,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'#b98348');gr.addColorStop(.5,'#d9a868');gr.addColorStop(1,'#b98348');g.fillStyle=gr;g.fillRect(0,0,w,h);
+  for(let i=0;i<40;i++){g.strokeStyle=`rgba(100,55,20,${.1+Math.random()*.25})`;g.lineWidth=.5+Math.random()*1.5;g.beginPath();const x=Math.random()*w;g.moveTo(x,0);for(let y=0;y<=h;y+=20)g.lineTo(x+Math.sin(y*.02+i)*3,y);g.stroke();}
+  g.fillStyle='#151515';g.fillRect(0,h*.66,w,h*.34);g.strokeStyle='#333';g.lineWidth=3;for(let y=h*.66;y<h;y+=9){g.beginPath();g.moveTo(0,y);g.lineTo(w,y+6);g.stroke();}
+  g.fillStyle='#1a1a1a';g.font='bold 22px Georgia,serif';g.save();g.translate(w*.5,h*.2);g.rotate(Math.PI/2);g.textAlign='center';g.fillText('THE REAL',0,8);g.restore();});
+const batMat=new THREE.MeshPhysicalMaterial({map:batTex,roughness:.42,clearcoat:.7,clearcoatRoughness:.25});
+
+function makePlayer(o){
+  const g=new THREE.Group(),p={g,o,state:'idle',t0:0,buf:mk(STAND),cur:mk(STAND),snap:mk(STAND),bt0:-9,bd:.2,mk:''};
+  const mJ=cloth(o.jersey,o),mP=cloth(o.pants,o),mS=mat(o.skin,.55),mK=mat(0x141414,.35),mW=mat(0xf4f4f4,.5),mSo=cloth(o.sock);
+  mJ.side=THREE.DoubleSide;
+  const mC=o.helmet?new THREE.MeshPhysicalMaterial({color:new THREE.Color(o.cap).convertSRGBToLinear(),roughness:.3,clearcoat:1,clearcoatRoughness:.08}):cloth(o.cap);
+  const add=(geo,m,par=g)=>{const x=new THREE.Mesh(geo,m);x.castShadow=true;x.receiveShadow=true;par.add(x);return x;};
+  const L=LEN;
+  const ua=lathe([[0,0],[.043,.005],[.05,.07],[.051,.13],[.045,.21],[.039,L.ua-.005],[0,L.ua]]),sleeve=lathe([[.072,-.02],[.07,.07],[.065,.15]]);
+  const fa=lathe([[0,0],[.04,.005],[.046,.06],[.042,.13],[.032,.22],[.027,L.fa-.005],[0,L.fa]]);
+  const th=lathe([[0,0],[.088,.005],[.093,.1],[.087,.25],[.073,.4],[.067,L.th],[0,L.th]]);
+  const shP=lathe([[0,0],[.069,.005],[.067,.12],[.062,.2],[0,.2]]),shS=lathe([[0,.15],[.058,.15],[.061,.25],[.048,.36],[.034,L.sh-.01],[0,L.sh]]);
+  const shoeU=new THREE.SphereGeometry(.06,14,10);shoeU.scale(.85,.62,2.1);shoeU.translate(0,0,.045);
+  const handG=new THREE.SphereGeometry(.045,12,10);handG.scale(.78,1.35,.55);handG.translate(0,.035,0);
+  const gloveG=new THREE.SphereGeometry(.1,16,12);gloveG.scale(.95,1.25,.5);gloveG.translate(0,.07,0);
+  const mHand=o.bgl?mat(o.bgl,.55):mS;
+  for(const s of['L','R']){
+    p['ua'+s]=add(ua,mS);add(sleeve,mJ,p['ua'+s]);p['fa'+s]=add(fa,mS);
+    p['th'+s]=add(th,mP);p['sh'+s]=add(shP,mP);add(shS,mSo,p['sh'+s]);
+    p['so'+s]=add(new THREE.SphereGeometry(.072,14,10),mJ);p['el'+s]=add(new THREE.SphereGeometry(.04,10,8),mS);p['kn'+s]=add(new THREE.SphereGeometry(.07,12,10),mP);
+    const shoe=new THREE.Group();g.add(shoe);p['ft'+s]=shoe;
+    add(shoeU,mK,shoe);add(new THREE.BoxGeometry(.1,.016,.27),mW,shoe).position.set(0,-.036,.045);
+    add(new THREE.BoxGeometry(.104,.014,.07),mW,shoe).position.set(0,.0,.0);}
+  p.hL=add(o.glove?gloveG:handG,o.glove?mat(0x7a4420,.5):mHand);p.hR=add(handG,mHand);
+  const tgL=lathe([[0,0],[.152,0],[.156,.35],[.166,.75],[.176,1.05],[0,1.05]],28);tgL.scale(1,1,.62);
+  const tgU=lathe([[0,-.08],[.17,-.08],[.188,.25],[.2,.55],[.196,.72],[.162,.88],[.07,1],[0,1]],28);tgU.scale(1,1,.62);
+  p.torsoL=add(tgL,mJ);p.torsoL.matrixAutoUpdate=false;p.torso=add(tgU,mJ);p.torso.matrixAutoUpdate=false;
+  const hg=lathe([[0,-.13],[.15,-.13],[.168,-.06],[.168,.06],[.158,.13],[0,.13]],22);hg.scale(1,1,.72);p.hips=add(hg,mP);p.hips.matrixAutoUpdate=false;
+  if(o.belt){const bg=new THREE.CylinderGeometry(.163,.163,.035,22);bg.scale(1,1,.73);add(bg,mK,p.hips).position.y=.1;}
+  if(o.num){const pl=new THREE.Mesh(new THREE.PlaneGeometry(.28,.62),new THREE.MeshStandardMaterial({map:numTex(o.num,o.name,o.jerseyHex,o.numColor),transparent:true,roughness:.8,polygonOffset:true,polygonOffsetFactor:-2}));
+    pl.scale.set(1,1.5,1);pl.position.set(0,.42,-.127);pl.rotation.y=Math.PI;p.torso.add(pl);}
+  if(o.team){const ch=new THREE.Mesh(new THREE.PlaneGeometry(.27,.34),new THREE.MeshStandardMaterial({map:chestTex(o.team,o.numColor),transparent:true,roughness:.8,polygonOffset:true,polygonOffsetFactor:-2}));
+    ch.position.set(0,.55,.126);p.torso.add(ch);}
+  p.neck=add(new THREE.CylinderGeometry(.05,.056,1,12).translate(0,.5,0),mS);
+  p.head=new THREE.Group();g.add(p.head);
+  add(new THREE.SphereGeometry(.1,28,20),mS,p.head).scale.set(.86,1.04,.98);
+  const jaw=add(new THREE.SphereGeometry(.072,18,12),mS,p.head);jaw.scale.set(.95,.8,1);jaw.position.set(0,-.052,.025);
+  const nose=add(new THREE.ConeGeometry(.016,.042,10),mS,p.head);nose.rotation.x=Math.PI/2;nose.position.set(0,-.008,.1);
+  const mEye=mat(0xf2f0ea,.3),mHair=mat(o.hair||0x1d1612,.8);p.mS=mS;p.mHair=mHair;
+  for(const sx of[-1,1]){add(new THREE.SphereGeometry(.013,10,8),mEye,p.head).position.set(sx*.032,.014,.083);
+    add(new THREE.SphereGeometry(.007,8,6),mK,p.head).position.set(sx*.032,.014,.095);
+    add(new THREE.BoxGeometry(.032,.007,.01),mHair,p.head).position.set(sx*.032,.036,.09);
+    const ear=add(new THREE.SphereGeometry(.026,10,8),mS,p.head);ear.scale.set(.45,1,.75);ear.position.set(sx*.088,0,-.005);}
+  add(new THREE.SphereGeometry(.103,18,10,Math.PI,Math.PI,Math.PI*.33,Math.PI*.28),mHair,p.head).position.z=-.004;
+  const cr=o.helmet?.123:.106,cap=add(new THREE.SphereGeometry(cr,24,12,0,Math.PI*2,0,Math.PI/2),mC,p.head);cap.position.y=o.helmet?0:.024;
+  const brim=add(new THREE.CylinderGeometry(.092,.092,.012,24,1,false,-Math.PI/2,Math.PI),mC,p.head);brim.scale.set(1,1,.95);brim.position.set(0,o.helmet?.004:.028,.07);brim.rotation.x=.12;
+  if(o.helmet){const flap=add(new THREE.SphereGeometry(.065,12,10),mC,p.head);flap.scale.set(.5,1,1.05);flap.position.set(.1,-.035,-.005);}
+  if(o.mask){const m=add(new THREE.BoxGeometry(.2,.23,.06),mat(0x222222,.4,.5),p.head);m.position.set(0,-.02,.1);}
+  if(o.bat)p.bat=add(lathe(BAT_PROFILE,22),batMat);
+  scene.add(g);ALL_PLAYERS.push(p);if(RIG)dressPlayer(p);return p;
+}
+const _a=V(),_up=V(),_side=V(),_fwd=V(),_m=new THREE.Matrix4(),_t=V(),_d=V(),_pp=V(),_s2=V(),_u2=V(),_f2=V();
+// procedural poses have no chest/toe joints: derive them from pelvis/neck and hip direction
+function fillAux(d){d.chest.lerpVectors(d.pelv,d.neck,.42);_s2.subVectors(d.lHip,d.rHip);_f2.set(-_s2.z,0,_s2.x).normalize();
+  d.lToe.copy(d.lFt).addScaledVector(_f2,.16);d.lToe.y=d.lFt.y-.04;d.rToe.copy(d.rFt).addScaledVector(_f2,.16);d.rToe.y=d.rFt.y-.04;}
+function ik(a,c,pole,l1,l2,outB){_d.subVectors(c,a);const dist=_d.length()||1e-4;_d.divideScalar(dist);
+  const dc=clamp(dist,Math.abs(l1-l2)+.02,l1+l2-.002);if(dc!==dist)c.copy(a).addScaledVector(_d,dc);
+  const al=(l1*l1+dc*dc-l2*l2)/(2*dc),h=Math.sqrt(Math.max(0,l1*l1-al*al));
+  _pp.subVectors(pole,a);_pp.addScaledVector(_d,-_pp.dot(_d));if(_pp.lengthSq()<1e-8)_pp.set(0,0,1).addScaledVector(_d,-_d.z);_pp.normalize();
+  outB.copy(a).addScaledVector(_d,al).addScaledVector(_pp,h);}
+function orient(m,a,b){_a.subVectors(b,a).normalize();m.position.copy(a);m.quaternion.setFromUnitVectors(UP,_a);}
+function setPose(p,src){const j=p.cur,L=LEN;for(const k in j)if(src[k])j[k].copy(src[k]);
+  ik(j.lSh,j.lHa,j.lEl,L.ua,L.fa,j.lEl);ik(j.rSh,j.rHa,j.rEl,L.ua,L.fa,j.rEl);
+  ik(j.lHip,j.lFt,j.lKn,L.th,L.sh,j.lKn);ik(j.rHip,j.rFt,j.rKn,L.th,L.sh,j.rKn);
+  orient(p.uaL,j.lSh,j.lEl);orient(p.uaR,j.rSh,j.rEl);orient(p.faL,j.lEl,j.lHa);orient(p.faR,j.rEl,j.rHa);
+  orient(p.thL,j.lHip,j.lKn);orient(p.thR,j.rHip,j.rKn);orient(p.shL,j.lKn,j.lFt);orient(p.shR,j.rKn,j.rFt);
+  p.soL.position.copy(j.lSh);p.soR.position.copy(j.rSh);p.elL.position.copy(j.lEl);p.elR.position.copy(j.rEl);p.knL.position.copy(j.lKn);p.knR.position.copy(j.rKn);
+  orient(p.hL,j.lEl,j.lHa);p.hL.position.copy(j.lHa);orient(p.hR,j.rEl,j.rHa);p.hR.position.copy(j.rHa);
+  if(!src._m)fillAux(j);
+  _up.subVectors(j.neck,j.chest);const tu=_up.length();_up.divideScalar(tu);
+  _side.subVectors(j.lSh,j.rSh);_side.addScaledVector(_up,-_side.dot(_up)).normalize();_fwd.crossVectors(_side,_up);
+  p.torso.matrix.makeBasis(_side,_t.copy(_up).multiplyScalar(tu+.03),_fwd).setPosition(j.chest);
+  _u2.subVectors(j.head,j.neck).normalize();
+  if(p.look){_f2.subVectors(p.look,j.head);_f2.addScaledVector(_u2,-_f2.dot(_u2));}
+  if(p.look&&_f2.lengthSq()>1e-6&&_f2.normalize().dot(_fwd)>-.2){_s2.crossVectors(_u2,_f2);_m.makeBasis(_s2,_u2,_f2);}
+  else{_f2.copy(_fwd).addScaledVector(_u2,-_fwd.dot(_u2)).normalize();_s2.crossVectors(_u2,_f2);_m.makeBasis(_s2,_u2,_f2);}
+  p.head.quaternion.setFromRotationMatrix(_m);p.head.position.copy(j.head);(p.hu||(p.hu=V())).copy(_u2);(p.hf||(p.hf=V())).copy(_f2);
+  _up.subVectors(j.chest,j.pelv);const tl=_up.length();_up.divideScalar(tl);
+  _side.subVectors(j.lHip,j.rHip);_side.addScaledVector(_up,-_side.dot(_up)).normalize();_fwd.crossVectors(_side,_up);
+  p.torsoL.matrix.makeBasis(_side,_t.copy(_up).multiplyScalar(tl),_fwd).setPosition(j.pelv);
+  _a.subVectors(j.head,j.neck);const nl=_a.length();p.neck.position.copy(j.neck).addScaledVector(_up,-.04);p.neck.quaternion.setFromUnitVectors(UP,_a.normalize());p.neck.scale.set(1,nl,1);
+  _side.subVectors(j.lHip,j.rHip);_side.addScaledVector(_up,-_side.dot(_up)).normalize();_fwd.crossVectors(_side,_up);
+  p.hips.matrix.makeBasis(_side,_up,_fwd).setPosition(_t.copy(j.pelv).addScaledVector(_up,-.03));
+  for(const [f,a,t] of[[p.ftL,j.lFt,j.lToe],[p.ftR,j.rFt,j.rToe]]){_a.subVectors(t,a);
+    f.position.set(a.x,Math.max(.055,a.y),a.z);f.rotation.set(clamp(-(Math.atan2(_a.y,Math.hypot(_a.x,_a.z))+.245),-.9,.6),Math.atan2(_a.x,_a.z),0,'YXZ');}
+  if(p.bat){_a.copy(j.bat).normalize();p.bat.quaternion.setFromUnitVectors(UP,_a);p.bat.position.copy(j.lHa).addScaledVector(_a,-.1);}
+  if(p.rig)rigPose(p,j);
+}
+
+// ---------- skinned body: CC0 "3D Male Base Mesh" (Rigify metarig), driven by the joint positions above ----------
+const ALL_PLAYERS=[];let RIG=null;
+const RIG_ORDER=['spine','spine001','spine002','spine003','spine004','spine005','shoulderL','upper_armL','forearmL','handL',
+  'shoulderR','upper_armR','forearmR','handR','thighL','shinL','footL','thighR','shinR','footR'];
+if(window.MALE_GLB_B64&&THREE.GLTFLoader){const bin=Uint8Array.from(atob(window.MALE_GLB_B64),c=>c.charCodeAt(0));
+  new THREE.GLTFLoader().parse(bin.buffer,'',gl=>{RIG=prepRig(gl.scene);ALL_PLAYERS.forEach(dressPlayer);},e=>console.error('model load failed',e));}
+function prepRig(root){root.updateMatrixWorld(true);const b={};root.traverse(o=>{if(o.isBone)b[o.name]=o;});
+  const wp=n=>b[n].getWorldPosition(V()),up=wp('spine005').sub(wp('spine')).normalize(),fw=wp('toeL').sub(wp('footL'));
+  fw.addScaledVector(up,-fw.dot(up)).normalize();const side=V().crossVectors(up,fw);
+  const rot=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(side,up,fw)).invert();
+  const leg=wp('thighL').distanceTo(wp('shinL'))+wp('shinL').distanceTo(wp('footL'));
+  return {root,rot,s:(LEN.th+LEN.sh)/leg};}
+function dressPlayer(p){const o=p.o,m=THREE.SkeletonUtils.clone(RIG.root);m.quaternion.copy(RIG.rot);m.scale.setScalar(RIG.s);
+  for(const c of p.g.children)if(c!==p.head&&c!==p.bat&&!(o.glove&&c===p.hL))c.visible=false;
+  p.head.children.forEach(c=>{if(c.material===p.mS||c.material===p.mHair)c.visible=false;});
+  p.g.add(m);let mesh;m.traverse(x=>{if(x.isSkinnedMesh)mesh=x;});
+  mesh.geometry=mesh.geometry.clone();mesh.castShadow=mesh.receiveShadow=true;mesh.frustumCulled=false;
+  const yaw=p.g.rotation.y,pos0=p.g.position.clone();p.g.rotation.y=0;p.g.position.set(0,0,0);p.g.updateMatrixWorld(true);
+  const bones={};mesh.skeleton.bones.forEach(x=>bones[x.name]=x);
+  const Gm=x=>x.matrixWorld.clone(),Gq=x=>{const q=new THREE.Quaternion();x.matrixWorld.decompose(V(),q,V());return q;},Gp=x=>V().setFromMatrixPosition(x.matrixWorld);
+  const R={m,mesh,bones,Qr:{},dR:{},rR:{},pQ:{},cur:{},last:{}},F=V(0,0,1),U=V(0,1,0);
+  for(const n of RIG_ORDER){const bn=bones[n],q=Gq(bn),d=V(0,1,0).applyQuaternion(q);R.Qr[n]=q;R.dR[n]=d;
+    const k=/upper_arm|forearm|hand/.test(n)?F.clone().negate():/foot/.test(n)?U:F;R.rR[n]=k.clone().addScaledVector(d,-k.dot(d)).normalize();
+    if(!RIG_ORDER.includes(bn.parent.name))R.pQ[n]=Gq(bn.parent);}
+  R.invParent=Gm(bones.spine.parent).invert();
+  R.uaM=Gp(bones['upper_armL']).distanceTo(Gp(bones['forearmL']));R.faM=Gp(bones['forearmL']).distanceTo(Gp(bones['handL']));
+  R.hipOff=Gp(bones['thighL']).add(Gp(bones['thighR'])).multiplyScalar(.5).sub(Gp(bones.spine));
+  // colour the body by region: uniform, belt, socks, cleats, skin, batting gloves
+  const P=mesh.geometry.attributes.position,JI=mesh.geometry.attributes.skinIndex,WI=mesh.geometry.attributes.skinWeight,mw=Gm(mesh),sl=mesh.skeleton.bones;
+  const ank=Gp(bones['footL']).y,belt=Gp(bones['thighL']).y-ank+.1,bp={};for(const n in bones)bp[n]=Gp(bones[n]);
+  const uaL=bp['upper_armL'].distanceTo(bp['forearmL']),C=h=>new THREE.Color(h).convertSRGBToLinear();
+  const cJ=C(o.jersey),cP=C(o.pants),cS=C(o.skin),cSo=C(o.sock),cK=C(0x151515),cG=C(o.bgl||o.skin),col=new Float32Array(P.count*3);
+  const head=new THREE.Box3(),chest=[1e9,-1e9],chY=bp['spine003'].y;
+  for(let i=0;i<P.count;i++){let bi=0,bw=-1;const ws=[WI.getX(i),WI.getY(i),WI.getZ(i),WI.getW(i)],js=[JI.getX(i),JI.getY(i),JI.getZ(i),JI.getW(i)];for(let k=0;k<4;k++)if(ws[k]>bw){bw=ws[k];bi=js[k];}
+    const n=sl[bi].name,v=V().fromBufferAttribute(P,i).applyMatrix4(mw),y=v.y-ank;let c;
+    if(/foot|toe|heel/.test(n)||y<.08)c=cK;
+    else if(/hand|f_|thumb/.test(n))c=cG;
+    else if(/forearm/.test(n))c=cS;
+    else if(/upper_arm/.test(n))c=v.distanceTo(bp[n])/uaL<.5?cJ:cS;
+    else if(/spine00[45]/.test(n)){c=cS;if(n==='spine005')head.expandByPoint(v);}
+    else if(/shin/.test(n))c=y<.47?cSo:cP;
+    else c=y<belt?cP:y<belt+.045?cK:cJ;
+    if(/spine00[23]/.test(n)&&Math.abs(v.x)<.07&&Math.abs(v.y-chY)<.12){chest[0]=Math.min(chest[0],v.z);chest[1]=Math.max(chest[1],v.z);}
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
+  mesh.geometry.setAttribute('color',new THREE.BufferAttribute(col,3));
+  mesh.material=new THREE.MeshStandardMaterial({vertexColors:true,skinning:true,roughness:.78,envMapIntensity:.8});
+  // primitive head extras (cap/helmet, eyes, mask) ride on the head bone
+  const hc=head.getCenter(V()),hs=head.getSize(V());R.headC=hc.clone().applyMatrix4(Gm(bones['spine005']).invert());R.headS=hs.x/.176;
+  // number on the back / team name on the chest, parented to the chest bone
+  const chB=bones['spine003'],inv=Gm(chB).invert(),iq=R.Qr['spine003'].clone().invert(),s=RIG.s;
+  const stick=(tex,w,h,z,flip)=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:tex,transparent:true,roughness:.8,polygonOffset:true,polygonOffsetFactor:-2}));
+    pl.position.set(0,chY-.03,z).applyMatrix4(inv);pl.quaternion.copy(iq);if(flip)pl.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(UP,Math.PI));pl.scale.setScalar(1/s);chB.add(pl);return pl;};
+  if(o.num&&chest[0]<1e8)p.numPlane=stick(numTex(o.num,o.name,o.jerseyHex,o.numColor),.24,.4,chest[0]-.006,true);
+  if(o.team&&chest[1]>-1e8)stick(chestTex(o.team,o.numColor),.24,.09,chest[1]+.006,false);
+  p.g.rotation.y=yaw;p.g.position.copy(pos0);p.g.updateMatrixWorld(true);p.rig=R;
+  setPose(p,p.cur);}
+const GRIP=.075; // wrist -> palm centre along the hand
+const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_m1=new THREE.Matrix4(),_m2=new THREE.Matrix4(),_v1=V(),_v2=V(),_hp=V(),_gp=V();
+function deltaQ(d0,r0,d1,r1,out){_v1.crossVectors(d0,r0);_m1.makeBasis(d0,r0,_v1);_v2.crossVectors(d1,r1);_m2.makeBasis(d1,r1,_v2);return out.setFromRotationMatrix(_m2.multiply(_m1.transpose()));}
+const perp=(v,d)=>{const r=v.clone().addScaledVector(d,-v.dot(d));return r.lengthSq()<1e-6?null:r.normalize();};
+function rigPose(p,j){const R=p.rig,B=R.bones,dir=(a,b)=>V().subVectors(b,a).normalize();
+  const lower=dir(j.pelv,j.chest),upper=dir(j.chest,j.neck),hipF=V().crossVectors(V().subVectors(j.lHip,j.rHip),lower).normalize(),shF=V().crossVectors(V().subVectors(j.lSh,j.rSh),upper).normalize();
+  const T={spine:[lower,hipF],'spine001':[lower,V().lerpVectors(hipF,shF,.33)],'spine002':[V().addVectors(lower,upper).normalize(),V().lerpVectors(hipF,shF,.66)],
+    'spine003':[upper,shF],'spine004':[dir(j.neck,j.head),shF],'spine005':[p.hu||upper,p.hf||shF]},base=V().lerpVectors(j.chest,j.neck,.85);
+  for(const [s,l] of[['L','l'],['R','r']]){const Sh=j[l+'Sh'],El=j[l+'El'],Ha=j[l+'Ha'],Hi=j[l+'Hip'],Kn=j[l+'Kn'],Ft=j[l+'Ft'],To=j[l+'Toe'];
+    const eb=V().subVectors(El,Sh).add(V().subVectors(El,Ha)),kf=V().subVectors(Kn,Hi).add(V().subVectors(Kn,Ft));
+    if(eb.lengthSq()<1e-5)eb.copy(shF).negate();if(kf.lengthSq()<1e-5)kf.copy(hipF);
+    T['shoulder'+s]=[dir(base,Sh),shF];T['upper_arm'+s]=[dir(Sh,El),eb];T['forearm'+s]=[dir(El,Ha),eb];T['hand'+s]=[dir(El,Ha),eb];
+    T['thigh'+s]=[dir(Hi,Kn),kf];T['shin'+s]=[dir(Kn,Ft),kf];T['foot'+s]=[dir(Ft,To),UP];}
+  const setBones=names=>{for(const n of names){const [d,r0]=T[n];let r=perp(r0,d);if(!r)r=R.last[n]||perp(R.rR[n],d)||R.rR[n];else(R.last[n]||(R.last[n]=V())).copy(r);
+    deltaQ(R.dR[n],R.rR[n],d,r,_q1);const Q=R.cur[n]||(R.cur[n]=new THREE.Quaternion());Q.multiplyQuaternions(_q1,R.Qr[n]);
+    if(n==='spine'){_hp.addVectors(j.lHip,j.rHip).multiplyScalar(.5).sub(R.hipOff.clone().applyQuaternion(_q1));B.spine.position.copy(_hp).applyMatrix4(R.invParent);}
+    const pq=R.cur[B[n].parent.name]&&RIG_ORDER.includes(B[n].parent.name)?R.cur[B[n].parent.name]:R.pQ[n];
+    B[n].quaternion.copy(pq).invert().multiply(Q);}};
+  setBones(RIG_ORDER);p.g.updateMatrixWorld(true);
+  const gpos=n=>{B[n].getWorldPosition(_gp);return p.g.worldToLocal(_gp).clone();};
+  // second pass: re-solve both arms from the model's real shoulders with the model's own arm lengths,
+  // so the hands land exactly on their targets (both hands on the bat handle)
+  const tgt={L:j.lHa.clone(),R:j.rHa.clone()},bd=V().copy(j.bat).normalize();
+  if(p.bat)tgt.R.copy(j.lHa).addScaledVector(dir(j.lEl,j.lHa),GRIP).addScaledVector(bd,.1).addScaledVector(dir(j.rEl,j.rHa),-GRIP);
+  for(const [s,l] of[['L','l'],['R','r']]){const S=gpos('upper_arm'+s),H=tgt[s],E=j[l+'El'].clone();ik(S,H,E,R.uaM,R.faM,E);
+    const eb=V().subVectors(E,S).add(V().subVectors(E,H));if(eb.lengthSq()<1e-5)eb.copy(shF).negate();
+    T['upper_arm'+s]=[dir(S,E),eb];T['forearm'+s]=[dir(E,H),eb];T['hand'+s]=[dir(E,H),eb];
+    p['grip'+s]=(p['grip'+s]||V()).copy(H).addScaledVector(dir(E,H),GRIP);}
+  setBones(['upper_armL','forearmL','handL','upper_armR','forearmR','handR']);p.g.updateMatrixWorld(true);
+  for(const s of['L','R']){const W=gpos('hand'+s),E=gpos('forearm'+s);p['grip'+s].copy(W).addScaledVector(W.clone().sub(E).normalize(),GRIP);}
+  if(p.bat){const hh=V().subVectors(p.gripR,p.gripL);if(hh.length()>.1&&hh.dot(bd)>0)bd.copy(hh.normalize()); // bat runs through both palms
+    p.bat.quaternion.setFromUnitVectors(UP,bd);p.bat.position.copy(p.gripL).addScaledVector(bd,-.06);}
+  if(p.o.glove){p.hL.position.copy(p.gripL);p.hL.quaternion.setFromUnitVectors(UP,dir(gpos('forearmL'),gpos('handL')));}
+  const hb=B['spine005'];_gp.copy(R.headC).applyMatrix4(hb.matrixWorld);p.head.position.copy(p.g.worldToLocal(_gp));
+  p.head.quaternion.multiplyQuaternions(R.cur['spine005'],_q2.copy(R.Qr['spine005']).invert());p.head.scale.setScalar(R.headS);
+}
+
+// Batter (local: +z = plate, +x = pitcher, -x = catcher)
+const BSa=A(STAND,{pelv:[0,.92,0],lHip:[.1,.9,0],rHip:[-.1,.9,0],lKn:[.36,.5,.12],rKn:[-.32,.5,.12],lFt:[.42,.05,.02],rFt:[-.4,.05,0],neck:[-.02,1.43,.1],head:[.04,1.59,.15],
+  lSh:[.17,1.39,.1],rSh:[-.19,1.39,.08],lEl:[0,1.2,.3],rEl:[-.38,1.27,.12],lHa:[-.16,1.38,.2],rHa:[-.18,1.45,.18],bat:[-.3,.9,-.25]});
+const BLa=A(BSa,{pelv:[-.04,.93,0],lHip:[.07,.92,0],rHip:[-.13,.91,0],lFt:[.28,.2,.08],lKn:[.3,.62,.24],rKn:[-.36,.5,.14],neck:[-.06,1.44,.09],head:[-.01,1.6,.14],
+  lSh:[.13,1.4,.12],rSh:[-.23,1.39,.06],lEl:[-.06,1.21,.27],rEl:[-.46,1.27,.06],lHa:[-.25,1.39,.13],rHa:[-.27,1.46,.11],bat:[-.5,.82,-.2]});
+const BPa=A(BLa,{pelv:[.02,.9,.01],lHip:[.11,.88,-.03],rHip:[-.09,.9,.05],lFt:[.56,.05,.02],lKn:[.5,.5,.1],rKn:[-.3,.48,.16],neck:[-.01,1.42,.11],head:[.04,1.58,.16],
+  lSh:[.15,1.38,.08],rSh:[-.2,1.37,.12],bat:[-.48,.8,-.08]});
+const BCa=A(BSa,{pelv:[.04,.9,.02],lHip:[.12,.88,-.06],rHip:[-.06,.9,.08],lFt:[.56,.05,.02],lKn:[.52,.5,.08],rKn:[-.2,.48,.25],rFt:[-.38,.09,.02],neck:[.02,1.41,.12],head:[.06,1.57,.2],
+  lSh:[.1,1.37,-.05],rSh:[-.06,1.35,.26],lEl:[.2,1.18,.25],rEl:[-.08,1.12,.36],lHa:[.07,1.04,.46],rHa:[.05,1.05,.39],bat:[.2,-.05,1]});
+const BXa=A(BCa,{lSh:[.04,1.37,-.12],rSh:[.04,1.35,.22],lEl:[.28,1.24,.06],rEl:[.2,1.18,.32],lHa:[.42,1.15,.38],rHa:[.35,1.15,.4],bat:[1,.15,.05]});
+const BFa=A(BXa,{lSh:[-.06,1.38,-.14],rSh:[.12,1.36,.15],lEl:[.26,1.36,-.14],rEl:[.3,1.25,.12],lHa:[.06,1.5,-.2],rHa:[.03,1.45,-.14],bat:[-.6,.5,-.6],rFt:[-.26,.14,.15],rKn:[-.12,.5,.26],head:[.12,1.56,.12]});
+const BUNTa=A(BSa,{pelv:[.02,.86,.02],lHip:[.1,.85,0],rHip:[-.06,.85,.08],lFt:[.36,.05,.12],rFt:[-.22,.05,.18],lKn:[.33,.48,.27],rKn:[-.16,.48,.3],neck:[.1,1.35,.12],head:[.18,1.5,.16],lSh:[.1,1.31,-.08],rSh:[.08,1.31,.26]});
+const BFLa=A(BSa,{pelv:[-.05,.88,-.1],neck:[-.1,1.36,-.16],head:[-.12,1.5,-.22],lSh:[.08,1.33,-.17],rSh:[-.26,1.32,-.1],lEl:[.12,1.32,-.02],rEl:[-.3,1.32,-.08],lHa:[0,1.48,.05],rHa:[-.18,1.5,0],bat:[-.2,.6,-.8]});
+const BS=mk(BSa),BF=mk(BFa),BFL=mk(BFLa),BUNT=mk(BUNTa),BL=mk(BLa),BAT_K=[null,mk(BPa),mk(BCa),mk(BXa),BF],BAT_T=[0,.15,.45,.65,1];
+const CONTACT_T=.16,SW=CLIPS.swing,BU=CLIPS.bunt,PC=CLIPS.pitch,LOAD_END=SW.ev.peak-CONTACT_T,SWING_DUR=SW.dur-LOAD_END;
+// Pitcher (local: +z = home plate). Right-handed, set position side-on.
+const PAa=A(STAND,{pelv:[0,.98,0],lHip:[0,.94,.1],rHip:[0,.94,-.1],lKn:[-.03,.52,.13],rKn:[-.03,.52,-.13],lFt:[0,.05,.2],rFt:[0,.05,-.2],neck:[-.03,1.5,0],head:[-.07,1.66,.02],
+  lSh:[-.02,1.44,.19],rSh:[-.02,1.44,-.19],lEl:[-.2,1.2,.14],rEl:[-.2,1.2,-.12],lHa:[-.26,1.26,.02],rHa:[-.25,1.25,-.02]});
+const PBa=A(PAa,{lHip:[0,.96,.08],lKn:[-.32,.98,.08],lFt:[-.12,.56,.1],rKn:[-.02,.54,-.12],lHa:[-.22,1.36,.02],rHa:[-.21,1.35,-.02],lEl:[-.2,1.28,.16],rEl:[-.2,1.28,-.14],head:[-.05,1.66,.05]});
+const PB2a=A(PAa,{pelv:[0,.95,.22],lHip:[-.02,.93,.3],rHip:[0,.93,.12],lKn:[-.12,.78,.66],lFt:[-.02,.36,.88],rKn:[0,.5,-.08],rFt:[0,.05,-.2],
+  neck:[-.02,1.47,.2],head:[-.05,1.63,.25],lSh:[-.03,1.42,.4],rSh:[0,1.42,.02],lEl:[-.18,1.4,.48],lHa:[-.12,1.36,.66],rEl:[.05,1.22,-.2],rHa:[.12,1.1,-.42]});
+const PCa=A(PAa,{pelv:[0,.88,.5],lHip:[-.02,.86,.6],rHip:[.02,.88,.4],lKn:[-.04,.5,1.22],rKn:[.02,.45,.05],lFt:[.02,.05,1.38],rFt:[0,.05,-.2],neck:[.02,1.38,.55],head:[-.01,1.54,.63],
+  lSh:[-.08,1.38,.73],rSh:[.1,1.38,.38],lEl:[-.14,1.33,.98],lHa:[-.08,1.28,1.12],rEl:[.36,1.42,.25],rHa:[.42,1.72,.1]});
+const PDa=A(PCa,{pelv:[0,.84,.8],lHip:[.1,.83,.82],rHip:[-.08,.85,.74],lKn:[.02,.5,1.45],rKn:[-.05,.42,.35],lFt:[.02,.05,1.4],rFt:[-.05,.15,-.05],neck:[0,1.3,1.08],head:[0,1.44,1.2],
+  lSh:[.19,1.27,1.02],rSh:[-.19,1.3,1.02],lEl:[.3,1.08,.95],lHa:[.16,1.03,.86],rEl:[-.36,1.6,1.15],rHa:[-.45,1.85,1.45]});
+const PEa=A(PDa,{pelv:[0,.78,.92],lHip:[.1,.78,.98],rHip:[-.1,.8,.86],neck:[.04,1.12,1.3],head:[.05,1.24,1.44],lSh:[.22,1.12,1.18],rSh:[-.15,1.1,1.28],lEl:[.36,.96,1],lHa:[.24,1,.88],
+  rEl:[-.02,.82,1.52],rHa:[.22,.66,1.32],rKn:[-.12,.5,.7],rFt:[-.15,.3,.3]});
+const PA=mk(PAa),PE=mk(PEa),PIT_K=[PA,mk(PBa),mk(PB2a),mk(PCa),mk(PDa),PE],PIT_T=[0,.35,.5,.62,.72,1];const RELEASE=PC.ev.release;
+const CATCH=mk(STAND,{pelv:[0,.52,0],lHip:[.12,.52,0],rHip:[-.12,.52,0],lKn:[.3,.56,.35],rKn:[-.3,.56,.35],lFt:[.32,.05,.05],rFt:[-.32,.05,.05],neck:[0,1.02,.12],head:[0,1.17,.16],
+  lSh:[.2,.97,.1],rSh:[-.2,.97,.1],lEl:[.3,.82,.35],lHa:[.15,.85,.55],rEl:[-.3,.75,.25],rHa:[-.2,.62,.3]});
+const UMP=mk(STAND,{pelv:[0,.8,0],lHip:[.12,.78,0],rHip:[-.12,.78,0],lKn:[.28,.45,.22],rKn:[-.28,.45,.22],lFt:[.36,.05,0],rFt:[-.36,.05,0],neck:[0,1.28,.22],head:[0,1.43,.28],
+  lSh:[.2,1.23,.2],rSh:[-.2,1.23,.2],lEl:[.26,1,.25],rEl:[-.26,1,.25],lHa:[.12,.88,.3],rHa:[-.12,.88,.3]});
+const READY=mk(STAND,{pelv:[0,.82,0],lHip:[.12,.8,0],rHip:[-.12,.8,0],lKn:[.2,.46,.18],rKn:[-.2,.46,.18],lFt:[.3,.05,0],rFt:[-.3,.05,0],neck:[0,1.3,.2],head:[0,1.45,.27],
+  lSh:[.2,1.25,.17],rSh:[-.2,1.25,.17],lEl:[.27,1,.3],rEl:[-.27,1,.3],lHa:[.17,.78,.42],rHa:[-.17,.78,.42]});
+
+const AWAY={team:'Hawks',bgl:0xf2f2f2,jersey:0x1f3a6b,jerseyHex:'#1f3a6b',numColor:'#fff',pants:0xd9d9d0,cap:0x1f3a6b,sock:0x1f3a6b,belt:1};
+const HOME={team:'Comets',pin:1,jersey:0xf1f0ea,jerseyHex:'#f1f0ea',numColor:'#b3202a',pants:0xe6e5de,cap:0xb3202a,sock:0xb3202a,belt:1};
+const SKINS=[0xd9a47e,0xc68e6a,0xe2b48c,0xb07a55];
+const LINEUP=[['林志遠',27],['張浩宇',8],['吳建誠',51],['許立恆',33],['黃冠霖',5]];
+let abIdx=0;
+const batterP=makePlayer(A(AWAY,{skin:SKINS[0],num:27,name:'林志遠',helmet:1,bat:0xb5793f}));
+batterP.g.position.set(-.75,0,.22);batterP.g.rotation.y=Math.PI/2;batterP.state='stance';
+{const d=sampleClip(SW,SW.ev.peak,{}),sw=d.lHa.clone().addScaledVector(V(.2,-.05,1).normalize(),.68);
+  batterP.g.position.set(clamp(.05-sw.z,-1.15,-.55),0,clamp(sw.x,-.3,.6));}
+const pitcherP=makePlayer(A(HOME,{skin:SKINS[1],num:18,name:'陳柏翰',glove:1}));pitcherP.g.position.set(0,.25,-18.44);
+const RELEASE_PT=(()=>{const d=sampleClip(PC,RELEASE,{});pitcherP.g.updateMatrixWorld();return pitcherP.g.localToWorld(d.rHa.clone());})();
+const catcherP=makePlayer(A(HOME,{skin:SKINS[2],num:2,name:'王凱',glove:1,mask:1,helmet:1}));catcherP.g.position.set(0,0,1.15);catcherP.g.rotation.y=Math.PI;
+const umpP=makePlayer({jersey:0x1b1f2a,pants:0x5a5d63,cap:0x111111,sock:0x111111,skin:SKINS[3],mask:1,belt:1});umpP.g.position.set(0,0,2.0);umpP.g.rotation.y=Math.PI;
+const fielders=[[17,-22],[9,-34],[-9,-34],[-17,-22],[-30,-76],[0,-92],[30,-76]].map(([x,z],i)=>{
+  const f=makePlayer(A(HOME,{skin:SKINS[i%4],glove:1}));f.g.position.set(x,0,z);f.g.rotation.y=Math.atan2(-x,-z);f.ph=Math.random()*6;return f;});
+function setBatterLook(i){const [n,num]=LINEUP[i%LINEUP.length];$('bName').textContent=n;$('bNum').textContent='#'+num;
+  batterP.o.num=num;batterP.o.name=n;const pl=batterP.numPlane||batterP.torso.children.find(c=>c.isMesh&&c.material.map);if(pl){pl.material.map.dispose();pl.material.map=numTex(num,n,AWAY.jerseyHex,'#fff');}}
+
+// ---------- ball, cursor, markers ----------
+const ballTex=canvasTex(1024,512,(g,W,H)=>{g.fillStyle='#f3efe4';g.fillRect(0,0,W,H);
+  for(let i=0;i<9000;i++){g.fillStyle=`rgba(120,100,70,${Math.random()*.06})`;g.fillRect(Math.random()*W,Math.random()*H,2,2);}
+  const a=.7,b=.3,k=2*Math.sqrt(a*b),P=t=>V(a*Math.cos(t)+b*Math.cos(3*t),a*Math.sin(t)-b*Math.sin(3*t),k*Math.sin(2*t));
+  const uv=v=>{const n=v.clone().normalize();let ph=Math.atan2(n.z,-n.x);if(ph<0)ph+=Math.PI*2;return[ph/(Math.PI*2)*W,Math.acos(clamp(n.y,-1,1))/Math.PI*H];};
+  const line=(p,q,c,w)=>{const A=uv(p),B=uv(q);if(Math.abs(A[0]-B[0])>W/2)return;g.strokeStyle=c;g.lineWidth=w;g.beginPath();g.moveTo(...A);g.lineTo(...B);g.stroke();};
+  const N=900;for(let i=0;i<N;i++){const t=i/N*Math.PI*2,p=P(t),q=P(t+Math.PI*2/N);line(p,q,'rgba(150,140,120,.5)',3);}
+  for(let i=0;i<108;i++){const t=i/108*Math.PI*2,p=P(t),tg=P(t+.01).sub(p).normalize(),n=p.clone().normalize().cross(tg).normalize();
+    for(const s of[-1,1]){const o=p.clone().addScaledVector(n,s*.05).addScaledVector(tg,-.03),e=p.clone().addScaledVector(n,s*.14).addScaledVector(tg,.03);line(o,e,'#c8202a',3.2);}}});
+const ball=new THREE.Mesh(new THREE.SphereGeometry(BR,32,20),new THREE.MeshStandardMaterial({map:ballTex,roughness:.55,emissive:0x222222}));
+ball.castShadow=true;scene.add(ball);
+const blob=new THREE.Mesh(new THREE.CircleGeometry(.12,16),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.35,depthWrite:false}));blob.rotation.x=-Math.PI/2;scene.add(blob);
+const TRAILN=2000,trailPos=new Float32Array(TRAILN*3),trailGeo=new THREE.BufferGeometry();trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPos,3));
+const trail=new THREE.Line(trailGeo,new THREE.LineBasicMaterial({color:0xfff2b0,transparent:true,opacity:.85}));trail.frustumCulled=false;scene.add(trail);let trailN=0;
+const landMark=new THREE.Mesh(new THREE.RingGeometry(.9,1.3,32),new THREE.MeshBasicMaterial({color:0xff4d2e,side:THREE.DoubleSide}));landMark.rotation.x=-Math.PI/2;landMark.visible=false;scene.add(landMark);
+const overlay=(m)=>{m.depthTest=false;m.transparent=true;return m;};
+// bat-shaped cursor: wooden bat silhouette, sweet spot of the barrel at the aim point, handle toward the batter; tilts with pitch height
+const BAT_X0=-.58,BAT_X1=.07;
+const batRad=x=>x<-.555?.03:x<-.33?.017:x<-.07?.017+(.052-.017)*smooth((x+.33)/.26):.052;
+const cursor=new THREE.Group(),batC=new THREE.Group();cursor.add(batC);
+{const top=[],N=60;for(let i=0;i<=N;i++){const x=BAT_X0+(BAT_X1-.052-BAT_X0)*i/N;top.push([x,batRad(x)]);}
+ const sh=new THREE.Shape();sh.moveTo(BAT_X0,0);top.forEach(([x,r])=>sh.lineTo(x,r));
+ for(let i=0;i<=12;i++){const a=Math.PI/2-Math.PI*i/12;sh.lineTo(BAT_X1-.052+Math.cos(a)*.052,Math.sin(a)*.052);}
+ top.slice().reverse().forEach(([x,r])=>sh.lineTo(x,-r));sh.closePath();
+ const wood=canvasTex(256,64,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#e9c48a');gr.addColorStop(.5,'#d3a263');gr.addColorStop(1,'#b07a3e');g.fillStyle=gr;g.fillRect(0,0,w,h);
+   for(let i=0;i<26;i++){g.strokeStyle=`rgba(110,60,20,${.15+Math.random()*.25})`;g.lineWidth=.6+Math.random()*1.4;g.beginPath();const y=Math.random()*h;g.moveTo(0,y);
+     for(let x=0;x<=w;x+=16)g.lineTo(x,y+Math.sin(x*.03+i)*2.5);g.stroke();}});
+ wood.wrapS=wood.wrapT=THREE.RepeatWrapping;wood.repeat.set(1.6,9);
+ const add=(o,r)=>{o.renderOrder=r;batC.add(o);return o;};
+ add(new THREE.Mesh(new THREE.ShapeGeometry(sh),overlay(new THREE.MeshBasicMaterial({map:wood,opacity:.8,depthWrite:false}))),10);
+ add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(sh.getPoints().map(p=>V(p.x,p.y,0))),overlay(new THREE.LineBasicMaterial({color:0x5a3214,opacity:.9}))),11);
+ scene.add(cursor);}
+const batTilt=y=>clamp((y-1.3)*.55,-.6,.1);
+// ball position relative to the bat cursor: hit test + normalized offsets (xn along bat from sweet spot, yn across)
+function batTest(T){const th=batTilt(aim.y),dx=T.x-aim.x,dy=T.y-aim.y,c=Math.cos(th),s=Math.sin(th);
+  const lx=dx*c+dy*s,ly=-dx*s+dy*c;if(lx<BAT_X0-BR||lx>BAT_X1+BR)return null;
+  const r=batRad(clamp(lx,BAT_X0,BAT_X1))+BR;if(Math.abs(ly)>r)return null;
+  return {xn:clamp(lx/.3,-1,1),yn:ly/r};}
+// pitch location marker: appears on release, ring shrinks onto the spot as the ball arrives
+const pmark=new THREE.Group();
+{const m=new THREE.MeshBasicMaterial({color:0xffffff,opacity:.9});pmark.add(new THREE.Mesh(new THREE.CircleGeometry(.04,20),overlay(m)));
+ pmark.ring=new THREE.Mesh(new THREE.RingGeometry(.045,.06,32),overlay(new THREE.MeshBasicMaterial({color:0x7fe6ff,opacity:.95})));pmark.add(pmark.ring);
+ pmark.children.forEach(o=>o.renderOrder=13);pmark.visible=false;scene.add(pmark);}
+const reticle=new THREE.Group();
+{const r=new THREE.Mesh(new THREE.RingGeometry(.055,.075,32),overlay(new THREE.MeshBasicMaterial({color:0xffffff})));
+ const l=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([V(-.12,0),V(-.04,0),V(.04,0),V(.12,0),V(0,-.12),V(0,-.04),V(0,.04),V(0,.12)]),overlay(new THREE.LineBasicMaterial({color:0xffffff})));
+ reticle.add(r,l);reticle.children.forEach(o=>o.renderOrder=10);scene.add(reticle);}
+const zone=new THREE.Group();
+{const w=.432,h=.55,t=.014,fr=new THREE.Shape();fr.moveTo(-w/2-t,-h/2-t);fr.lineTo(w/2+t,-h/2-t);fr.lineTo(w/2+t,h/2+t);fr.lineTo(-w/2-t,h/2+t);fr.closePath();
+ const ho=new THREE.Path();ho.moveTo(-w/2,-h/2);ho.lineTo(-w/2,h/2);ho.lineTo(w/2,h/2);ho.lineTo(w/2,-h/2);ho.closePath();fr.holes.push(ho);
+ zone.add(new THREE.Mesh(new THREE.PlaneGeometry(w,h),overlay(new THREE.MeshBasicMaterial({color:0xffffff,opacity:.08,depthWrite:false}))));
+ zone.add(new THREE.Mesh(new THREE.ShapeGeometry(fr),overlay(new THREE.MeshBasicMaterial({color:0xffffff,opacity:.9}))));
+ const gl=[];for(const f of[1/3,2/3]){gl.push(V(-w/2+w*f,-h/2),V(-w/2+w*f,h/2),V(-w/2,-h/2+h*f),V(w/2,-h/2+h*f));}
+ zone.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(gl),overlay(new THREE.LineBasicMaterial({color:0xffffff,opacity:.35}))));
+ zone.children.forEach(o=>o.renderOrder=9);zone.position.set(0,.775,0);scene.add(zone);}
+
+// ---------- pitches ----------
+const TYPES=[{zh:'四縫線速球',en:'4-Seam',v:148,bx:.02,by:.08,c:'#ff5a3c'},{zh:'曲球',en:'Curve',v:122,bx:.18,by:-.6,c:'#3cb4ff'},{zh:'滑球',en:'Slider',v:134,bx:.38,by:-.18,c:'#ffd23a'},
+  {zh:'變速球',en:'Change',v:126,bx:-.14,by:-.3,c:'#7dff8a'},{zh:'伸卡球',en:'Sinker',v:143,bx:-.22,by:-.32,c:'#d58cff'}];
+function makePitch(ti,tx,ty,power,miss){
+  let t=TYPES[ti],kmh=t.v*(.86+.18*power),B=V(t.bx,t.by,0).multiplyScalar(.8+.4*power);
+  if(miss==='meat'){t=TYPES[0];kmh=t.v*.84;tx=(Math.random()-.5)*.06;ty=.8;B.set(0,.02,0);}
+  if(miss==='bean'){t=TYPES[0];kmh=t.v*.95;tx=-.7;ty=1.25;B.set(0,0,0);}
+  const P0=RELEASE_PT.clone(),T=V(tx,ty,0),sp=kmh/3.6;
+  return {t,kmh,sp,P0,T,B,h:.22*(150/kmh)**2,dur:Math.max(.5,P0.distanceTo(T)/sp*1.3),miss,resolved:false};
+}
+function pitchPos(p,u,o){
+  const ax=p.T.x-p.B.x-p.P0.x,ay=p.T.y-p.B.y-p.P0.y,az=-p.P0.z;
+  if(u<=1)return o.set(p.P0.x+ax*u+p.B.x*u*u,p.P0.y+ay*u+p.B.y*u*u+4*p.h*u*(1-u),p.P0.z+az*u);
+  const d=u-1;return o.set(p.T.x+(ax+2*p.B.x)*d,p.T.y+(ay+2*p.B.y-4*p.h)*d,az*d);
+}
+const isStrike=T=>Math.abs(T.x)<.253&&T.y>.46&&T.y<1.09;
+const isHBP=T=>T.x<-.42&&T.y>.25&&T.y<1.9;
+
+// ---------- game state ----------
+let mode='bat',state='ready',now=0,readyAt=0,pitch=null,pending=null,bunting=false,charging=false,meter=0,pitchCount=0,selType=0;
+let abOver=false,resultUntil=0,hb=null,cpuPlan=null;const count={b:0,s:0,o:0},keys={},mouse=new THREE.Vector2(),aim=V(0,.8,0);
+const ray=new THREE.Raycaster(),zplane=new THREE.Plane(V(0,0,1),0);
+const redSize=()=>Math.min(.62,.08+.035*pitchCount);
+
+function flash(big,small){const m=$('msg');m.innerHTML=big+(small?`<small>${small}</small>`:'');m.classList.remove('show');void m.offsetWidth;m.classList.add('show');}
+function result(big,small,end){flash(big,small);state='result';resultUntil=now+1.7;abOver=end;
+  if(pitch)$('pinfo').textContent=`${Math.round(pitch.kmh)} km/h · ${pitch.t.zh}`;hud();}
+function strikeCall(big,small){count.s++;if(count.s>=3){count.o++;result('三振出局','STRIKEOUT',true);}else result(big,small,false);}
+function ballCall(){count.b++;if(count.b>=4)result('四壞球保送','WALK',true);else result('壞球','BALL',false);}
+function callPitch(){pitch.resolved=true;const T=pitch.T;
+  if(isHBP(T))return result('觸身球','HIT BY PITCH',true);
+  isStrike(T)?strikeCall('好球','STRIKE'):ballCall();}
+
+function startPitch(p){pitch=p;state='windup';p.tRel=now+RELEASE;p.tArr=p.tRel+p.dur;pitcherP.state='pitch';pitcherP.t0=now;pending=null;cpuPlan=null;}
+function cpuThrow(){const inZ=Math.random()<.6;let tx,ty;
+  if(inZ){tx=(Math.random()-.5)*.4;ty=.52+Math.random()*.5;}else{const s=Math.random();
+    if(s<.5){tx=(Math.random()<.5?-1:1)*(.3+Math.random()*.2);ty=.4+Math.random()*.8;}else{tx=(Math.random()-.5)*.5;ty=Math.random()<.5?.3:1.25;}}
+  const miss=Math.random()<.05?(Math.random()<.6?'meat':'bean'):'';
+  startPitch(makePitch(Math.random()*TYPES.length|0,tx,ty,.4+Math.random()*.55,miss));}
+function throwPitch(missed){if(!charging)return;charging=false;let tx=aim.x,ty=aim.y,miss='';const power=clamp(meter/(1-redSize()));
+  if(missed){miss=Math.random()<.5?'meat':'bean';flash('失投！',miss==='meat'?'紅中直球 MEATBALL':'觸身球 BEAN BALL');}
+  else{const s=.02+.06*power*power;tx+=gauss()*s;ty+=gauss()*s;}
+  startPitch(makePitch(selType,tx,ty,power,miss));pitchCount++;meter=0;hud();}
+function planCPU(p){const inZ=isStrike(p.T),meat=p.miss==='meat';
+  if(isHBP(p.T))return{swing:false};
+  if(Math.random()>(meat?.97:inZ?.68:.27))return{swing:false};
+  let cp=meat?.92:inZ?.62:.25;cp-=(p.kmh-135)/100*.6+Math.hypot(p.B.x,p.B.y)*.25;
+  if(Math.random()<cp){const w=meat?.4:.85;return{swing:true,contact:true,tn:(Math.random()*2-1)*w,xn:(Math.random()*2-1)*.6,yn:(Math.random()*2-1)*.8+(meat?.25:0)};}
+  return{swing:true,contact:false,tn:(Math.random()<.5?-1:1)*(1.1+Math.random()*.8)};}
+
+function startSwing(p){if(p.state==='swing'&&now-p.t0<SWING_DUR*1.6)return false;p.state='swing';p.t0=now;return true;}
+function onSwing(){if(state==='hit'||state==='result')return;bunting=false;if(!startSwing(batterP))return;
+  if(pitch&&!pitch.resolved&&!pending)pending={tcon:now+CONTACT_T};}
+function resolveSwing(){const pd=pending;pending=null;if(!pitch||pitch.resolved)return;
+  if(pd.cpu){const pl=pd.plan;return pl.contact?contact(pl.tn,pl.xn,pl.yn):strikeCall('揮棒落空','SWING & MISS');}
+  const tn=(pitch.tArr-pd.tcon)/.09,bt=batTest(pitch.T);
+  if(Math.abs(tn)<=1&&bt)contact(tn,bt.xn,bt.yn);else strikeCall('揮棒落空','SWING & MISS');}
+function resolveBunt(){const bt=batTest(pitch.T);
+  if(bt){const xn=bt.xn,yn=bt.yn;const bd=(keys.d?1:0)-(keys.a?1:0);
+    launch(6+Math.random()*4,-6+yn*12+gauss()*3,bd*26+xn*8+gauss()*4,true);}
+  else{bunting=false;strikeCall('觸擊失敗','BUNT MISSED');}}
+function contact(tn,xn,yn){
+  const q=Math.max(0,1-.55*Math.abs(tn)-.45*Math.hypot(xn*.8,yn));
+  const la=10+yn*38+gauss()*4,spray=-tn*55+xn*6+gauss()*5;
+  const v=(23+26*q)*(1-.4*Math.min(1,Math.abs(la-22)/70))+(pitch.sp-38)*.15;
+  launch(v,la,spray,false);}
+function launch(spd,la,spray,bunt){pitch.resolved=true;state='hit';
+  const a=la*D2R,s=spray*D2R;ball.position.set(pitch.T.x,pitch.T.y,-.25);
+  hb={v:V(spd*Math.cos(a)*Math.sin(s),spd*Math.sin(a),-spd*Math.cos(a)*Math.cos(s)),landed:false,hr:false,t0:now,spd,la,bunt,foul:false};
+  trailN=0;trail.visible=true;$('pinfo').textContent=`${Math.round(pitch.kmh)} km/h · ${pitch.t.zh}`;
+  $('hbRes').textContent='擊球中… IN PLAY';$('hbExit').textContent=`${Math.round(spd*3.6)} km/h`;$('hbLa').textContent=`${Math.round(la)}°`;
+  $('hbDist').textContent='—';$('hitBox').style.display='block';}
+function groundH(x,z){const r=Math.hypot(x,z),th=Math.atan2(x,-z),a=Math.abs(th);
+  if(a<=Math.PI/4){const w=rw(th);return r>w?WALL_H+(r-w)*.6:0;}
+  const dp=a<Math.PI*.72?r*Math.sin(a-Math.PI/4):r;return dp>14.5?2.2+(dp-14.5)*.6:0;}
+function stepBall(dt){const v=hb.v,p=ball.position,N=4,h=dt/N;
+  for(let i=0;i<N;i++){const px=p.x,pz=p.z,g0=groundH(px,pz),sp=v.length(),K=.0052,lift=hb.landed||hb.la<6?0:.0013*sp*sp;
+    v.x-=K*sp*v.x*h;v.z-=K*sp*v.z*h;v.y+=(-9.81-K*sp*v.y+lift)*h;p.addScaledVector(v,h);
+    const r=Math.hypot(p.x,p.z),th=Math.atan2(p.x,-p.z),w=rw(th);
+    if(!hb.hr&&Math.abs(th)<=Math.PI/4&&r>=w&&r<w+1.5){
+      if(p.y>WALL_H){hb.hr=true;flash('全壘打！','HOME RUN!');}
+      else{const nx=p.x/r,nz=p.z/r,vn=v.x*nx+v.z*nz;if(vn>0){v.x-=1.4*vn*nx;v.z-=1.4*vn*nz;}p.x-=nx*(r-w+.05);p.z-=nz*(r-w+.05);}}
+    let g=groundH(p.x,p.z);
+    // ran into the front of the stands from below: bounce back off it instead of popping up onto it
+    if(g>g0+.3&&p.y<g-.2){p.x=px;p.z=pz;v.x*=-.45;v.z*=-.45;g=g0;}
+    if(p.y<=g+BR){p.y=g+BR;if(!hb.landed)land();
+      const soft=g>0,vy=-v.y;
+      if(vy>1.2){v.y=vy*(soft?.3:.45);const f=soft?.55:.8;v.x*=f;v.z*=f;}else v.y=0;}
+    if(hb.landed&&p.y<=g+BR+.002&&v.y===0){const hs=Math.hypot(v.x,v.z);
+      if(hs>0){const d=Math.min(hs,(g>0?6:2.2)*h)/hs;v.x-=v.x*d;v.z-=v.z*d;}}}
+  if(!hb.landed&&now-hb.t0>10)land();
+  if(!hb.landed)$('hbDist').textContent=`${Math.hypot(p.x,p.z).toFixed(1)} m`;
+  if(trailN<TRAILN){trailPos.set([p.x,p.y,p.z],trailN*3);trailN++;trailGeo.setDrawRange(0,trailN);trailGeo.attributes.position.needsUpdate=true;}
+  blob.position.set(p.x,groundH(p.x,p.z)+.03,p.z);blob.visible=true;}
+function land(){hb.landed=true;hb.landT=now;const p=ball.position,d=Math.hypot(p.x,p.z),th=Math.atan2(p.x,-p.z);
+  landMark.position.set(p.x,groundH(p.x,p.z)+.04,p.z);landMark.visible=true;
+  $('hbDist').textContent=`${d.toFixed(1)} m · ${Math.round(d*3.281)} ft`;
+  let kind;
+  if(hb.hr)kind=['全壘打！','HOME RUN'];
+  else if(Math.abs(th)>Math.PI/4){hb.foul=true;kind=['界外球','FOUL BALL'];}
+  else kind=hb.bunt?['觸擊短打','BUNT']:hb.la<10?['滾地球','GROUND BALL']:hb.la<25?['平飛球','LINE DRIVE']:['高飛球','FLY BALL'];
+  $('hbRes').textContent=`${kind[0]} ${kind[1]}`;if(!hb.hr)flash(kind[0],kind[1]);}
+
+function showPitch(p){const e=$('speed');e.innerHTML=`<b>${Math.round(p.kmh)}</b>km/h<i style="color:${p.t.c}">${p.t.zh} · ${p.t.en}</i>`;
+  e.classList.add('show');$('pinfo').textContent=`${Math.round(p.kmh)} km/h · ${p.t.zh}`;}
+function readyPitch(){$('speed').classList.remove('show');state='ready';pitch=null;pending=null;bunting=false;hb=null;charging=false;meter=0;
+  batterP.state='stance';readyAt=now+1.3;trail.visible=false;landMark.visible=false;blob.visible=false;$('hitBox').style.display='none';hud();}
+function newAB(){count.b=count.s=0;if(count.o>=3)count.o=0;abIdx++;setBatterLook(abIdx);readyPitch();}
+function next(){abOver?newAB():readyPitch();abOver=false;}
+function setMode(m){mode=m;count.b=count.s=count.o=0;readyPitch();
+  catcherP.g.visible=umpP.g.visible=m==='pitch';
+  $('modeTag').textContent=m==='bat'?'打擊模式 BATTING':'投球模式 PITCHING';$('modeTag').style.background=m==='bat'?'#d9481c':'#1c7bd9';
+  $('modeBtn').textContent=m==='bat'?'切換到 投球模式 (M)':'切換到 打擊模式 (M)';
+  $('pitchList').style.display=$('meterBox').style.display=m==='pitch'?'':'none';
+  $('help').innerHTML=(m==='bat'?[['移動滑鼠','移動球棒打擊區'],['左鍵','揮棒 Swing'],['右鍵','觸擊姿勢 Bunt'],['A / D','觸擊方向'],['M','切換投球模式']]
+    :[['1 – 5','選擇球種'],['移動滑鼠','選擇進壘位置'],['按住左鍵','蓄力，放開投球'],['紅色區域','失投！(紅中/觸身)'],['R','休息，回復體力'],['M','切換打擊模式']])
+    .map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('');
+  camSnap=true;hud();}
+
+// ---------- HUD ----------
+$('pitchList').innerHTML=TYPES.map((t,i)=>`<button data-i="${i}"><kbd>${i+1}</kbd><span class="dot" style="background:${t.c}"></span>${t.zh} <small style="opacity:.6">${t.en} ${t.v}</small></button>`).join('');
+$('pitchList').querySelectorAll('button').forEach(b=>b.onclick=e=>{selType=+b.dataset.i;hud();});
+$('modeBtn').onclick=()=>setMode(mode==='bat'?'pitch':'bat');
+function hud(){const dots=(n,max,c)=>Array.from({length:max},(_,i)=>`<i class="${i<n?'on '+c:''}"></i>`).join('');
+  $('cnt').innerHTML=`<b>B</b>${dots(count.b,3,'b')}<b>S</b>${dots(count.s,2,'s')}<b>O</b>${dots(count.o,2,'o')}`;
+  $('pitchList').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('sel',i===selType));
+  $('mRed').style.width=(redSize()*100)+'%';$('pc').textContent=pitchCount;
+  const st=1-(redSize()-.08)/.54;$('stamFill').style.width=(st*100)+'%';$('stamFill').style.background=st>.5?'#3fd36b':st>.25?'#ffd23a':'#ff4141';
+  reticle.children.forEach(o=>o.material.color.set(TYPES[selType].c));}
+
+// ---------- input ----------
+const cv=renderer.domElement;
+addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;});
+cv.addEventListener('mousedown',e=>{
+  if(mode==='bat'){if(e.button===0)onSwing();else if(e.button===2&&state!=='hit'&&state!=='result'&&batterP.state!=='swing')bunting=!bunting;}
+  else if(e.button===0&&state==='ready'){charging=true;meter=0;}});
+addEventListener('mouseup',e=>{if(e.button===0&&mode==='pitch'&&charging)throwPitch(false);});
+addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;
+  if(k==='m')setMode(mode==='bat'?'pitch':'bat');
+  if(k>='1'&&k<='5'&&mode==='pitch'&&!charging){selType=+k-1;hud();}
+  if(k==='r'&&mode==='pitch'){pitchCount=0;hud();flash('休息','STAMINA RESTORED');}});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+
+// ---------- animation ----------
+// when a player's action changes, snapshot the current pose and blend into the new one
+function poseKey(p,key,dur){if(p.mk!==key){for(const k in p.buf)if(p.buf[k].isVector3)p.snap[k].copy(p.buf[k]);p.bt0=now;p.mk=key;p.bd=dur;}}
+function blendIn(p){const k=clamp((now-p.bt0)/p.bd);if(k<1){lerpPose(p.snap,p.buf,smooth(k),p.buf);p.buf._m=1;}}
+// bat angle through the swing, keyed to the mocap timeline (hands/body come from the recording)
+const BAT_TK=[0,LOAD_END,SW.ev.peak-.07,SW.ev.peak,SW.ev.peak+.1,SW.ev.peak+.3,SW.dur],
+  BAT_DK=[[-.3,.9,-.25],[-.55,.8,-.15],[-.75,.15,.55],[.2,-.05,1],[1,.15,.05],[-.6,.5,-.6],[-.6,.5,-.6]].map(a=>({bat:V(...a)}));
+function batDir(t,o){keyInterp(BAT_DK,BAT_TK,t,{bat:o});}
+function animPlayers(dt){
+  const p=batterP,b=p.buf,ts=now-p.t0;
+  if(p.state==='swing'&&ts>SWING_DUR+.7)p.state='stance';
+  let key=p.state==='swing'?'swing':bunting?'bunt':p.state,Ld=0;
+  if(key==='stance'&&pitch&&!pitch.hitBall){
+    if(state==='windup'||state==='flight')Ld=clamp((now-(pitch.tRel-LOAD_END))/LOAD_END);
+    if((state==='flight'&&now>pitch.tArr+.15)||state==='result'){key='relax';Ld=0;}}
+  poseKey(p,key,key==='swing'?.06:key==='relax'?.6:key==='stance'?.5:.25);
+  if(key==='swing'){const tc=LOAD_END+Math.min(ts,SWING_DUR);sampleClip(SW,tc,b);batDir(tc,b.bat);}
+  else if(key==='bunt'){sampleClip(BU,BU.ev.hold,b);const h=clamp(aim.y+.02,.55,1.5),dy=h-(b.lHa.y+b.rHa.y)/2;
+    for(const k of['lHa','rHa','lEl','rEl'])b[k].y+=dy;
+    const yaw=((keys.d?1:0)-(keys.a?1:0))*-.35;b.bat.set(Math.sin(yaw)+.1,.04,Math.cos(yaw));}
+  else if(key==='flinch'){lerpPose(BFL,BFL,0,b);b._m=0;fillAux(b);}
+  else{sampleClip(SW,Ld*LOAD_END,b);batDir(Ld*LOAD_END,b.bat);if(Ld===0){const w=Math.sin(now*2.2)*.09;b.bat.x+=w;b.bat.z-=w*.4;const br=Math.sin(now*1.6)*.006;b.head.y+=br;b.neck.y+=br;}}
+  blendIn(p);
+  // eyes on the ball (in the pitcher's hand, in flight, or batted)
+  p.g.updateMatrixWorld();p.look=p.look||V();p.look.copy(ball.position);p.g.worldToLocal(p.look);if(p.look.x<.3&&state!=='hit')p.look.set(18,1.6,0);
+  setPose(p,b);
+  const q=pitcherP,qb=q.buf,tp=now-q.t0;
+  if(q.state==='pitch'&&tp>PC.dur+.3)q.state='idle';
+  poseKey(q,q.state,q.state==='idle'?.9:.15);
+  if(q.state==='pitch')sampleClip(PC,tp,qb);
+  else{sampleClip(PC,0,qb);const br=Math.sin(now*1.6)*.006;qb.neck.y+=br;qb.head.y+=br;qb.chest.y+=br*.6;}
+  blendIn(q);
+  q.look=q.look||V();if(state==='hit'){q.g.updateMatrixWorld();q.look.copy(ball.position);q.g.worldToLocal(q.look);}else q.look.set(0,1.1,18.4);
+  setPose(q,qb);
+  if(catcherP.g.visible){const c=catcherP.buf;lerpPose(CATCH,CATCH,0,c);
+    if(pitch&&state!=='ready'){const k=clamp((now-pitch.tRel)/pitch.dur);c.lHa.lerp(V(-pitch.T.x,clamp(pitch.T.y,.3,1.5),.62),smooth(k));c.lEl.lerpVectors(c.lSh,c.lHa,.5).add(V(.12,-.12,0));}
+    setPose(catcherP,c);setPose(umpP,UMP);}
+  for(const f of fielders){const fb=f.buf;lerpPose(READY,READY,0,fb);const s=Math.sin(now*1.3+f.ph)*.01;fb.pelv.y+=s;fb.neck.y+=s;fb.head.y+=s;setPose(f,fb);
+    if(f.yaw0===undefined)f.yaw0=f.g.rotation.y;
+    const ty=state==='hit'?Math.atan2(ball.position.x-f.g.position.x,ball.position.z-f.g.position.z):f.yaw0;
+    let d=ty-f.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));f.g.rotation.y+=d*Math.min(1,dt*5);}
+}
+
+// ---------- camera ----------
+const camPos=V(),camLook=V(),camGoal=V(),lookGoal=V();let camSnap=true;
+function updateCamera(dt){
+  if(state==='hit'&&hb){const b=ball.position,d=V(b.x,0,b.z);if(d.length()<1)d.set(0,0,-1);d.normalize();
+    camGoal.set(b.x-d.x*20,Math.max(5,b.y*.6+5),b.z-d.z*20);if(camGoal.z>9)camGoal.z=9;lookGoal.copy(b);}
+  else if(mode==='bat'){camGoal.set(.3,1.25,3.9);lookGoal.set(0,1.0,-18);}
+  else{camGoal.set(0,3.0,-24.2);lookGoal.set(0,.9,0);}
+  const k=camSnap?1:1-Math.exp(-(state==='hit'?3.5:5)*dt),kl=camSnap?1:1-Math.exp(-9*dt);camSnap=false;
+  camPos.lerp(camGoal,k);camLook.lerp(lookGoal,kl);camera.position.copy(camPos);camera.lookAt(camLook);
+  const fov=state==='hit'?50:mode==='bat'?38:30;if(Math.abs(camera.fov-fov)>.01){camera.fov+=(fov-camera.fov)*Math.min(1,dt*4);camera.updateProjectionMatrix();}
+}
+
+// ---------- main loop ----------
+const clock=new THREE.Clock(),_w=V();
+function update(dt){now+=dt;
+  if(state!=='hit'){ray.setFromCamera(mouse,camera);if(ray.ray.intersectPlane(zplane,_w)){
+    if(mode==='bat')aim.set(clamp(_w.x,-.75,.75),clamp(_w.y,.2,1.6),0);else if(!charging||true)aim.set(clamp(_w.x,-.9,.9),clamp(_w.y,.1,1.8),0);}}
+  cursor.visible=mode==='bat'&&state!=='hit';reticle.visible=mode==='pitch'&&(state==='ready');zone.visible=state!=='hit';
+  cursor.position.copy(aim);batC.rotation.z=batTilt(aim.y);reticle.position.copy(aim);
+  pmark.visible=mode==='bat'&&!!pitch&&state==='flight'&&now<pitch.tArr+.15;
+  if(pmark.visible){pmark.position.set(pitch.T.x,pitch.T.y,0);pmark.ring.scale.setScalar(1+4*clamp(1-(now-pitch.tRel)/pitch.dur));}
+  $('buntBox').style.display=mode==='bat'&&bunting?'block':'none';
+  if(bunting){const bd=(keys.d?1:0)-(keys.a?1:0);$('bL').classList.toggle('on',bd<0);$('bC').classList.toggle('on',bd===0);$('bR').classList.toggle('on',bd>0);}
+  if(mode==='pitch'){if(charging){meter+=dt/1.1;if(meter>=1-redSize()){meter=1-redSize();throwPitch(true);}}
+    $('mFill').style.width=(meter*100)+'%';$('mTxt').textContent=charging?Math.round(clamp(meter/(1-redSize()))*100)+'%':'';}
+  if(mode==='bat'&&state==='ready'&&now>=readyAt)cpuThrow();
+  if(state==='windup'&&now>=pitch.tRel){state='flight';showPitch(pitch);
+    // the ball leaves from the pitcher's actual fingers
+    if(pitcherP.gripR){pitch.P0.copy(pitcherP.gripR);pitcherP.g.localToWorld(pitch.P0);pitch.dur=Math.max(.5,pitch.P0.distanceTo(pitch.T)/pitch.sp*1.3);pitch.tArr=pitch.tRel+pitch.dur;}
+    if(mode==='pitch'){cpuPlan=planCPU(pitch);if(cpuPlan.swing)pending={cpu:true,plan:cpuPlan,tcon:pitch.tArr-cpuPlan.tn*.075};}}
+  if(pitch&&(state==='flight'||(state==='result'&&!pitch.hitBall))){const u=(now-pitch.tRel)/pitch.dur;
+    pitchPos(pitch,u,ball.position);
+    if(mode==='pitch'&&ball.position.z>.55)pitchPos(pitch,1+.55/(-pitch.P0.z),ball.position);
+    ball.visible=ball.position.z<3;
+    if(state==='flight'){
+      if(pending&&pending.cpu&&batterP.state!=='swing'&&now>=pending.tcon-CONTACT_T)startSwing(batterP);
+      if(pending&&now>=pending.tcon)resolveSwing();
+      else if(!pitch.resolved&&bunting&&u>=1)resolveBunt();
+      else if(!pitch.resolved&&!pending&&now>=pitch.tArr+.1)callPitch();
+      if(isHBP(pitch.T)&&u>.55&&batterP.state==='stance'&&!bunting){batterP.state='flinch';batterP.t0=now;}}}
+  else if(state==='ready'||state==='windup'){pitcherP.g.updateMatrixWorld();ball.position.copy(pitcherP.gripR||pitcherP.buf.rHa);pitcherP.g.localToWorld(ball.position);ball.visible=true;}
+  if(state==='hit'){pitch.hitBall=true;ball.visible=true;stepBall(dt);if(hb.landed&&now-hb.landT>=3){
+    if(hb.foul){if(count.s<2)count.s++;readyPitch();}else newAB();}}
+  if(state==='result'&&now>=resultUntil)next();
+  ball.scale.setScalar(state==='hit'?2.2:1.5);ball.rotation.x+=dt*(state==='hit'?-28:(state==='flight'?36:0));ball.rotation.z+=dt*(state==='flight'&&pitch?pitch.B.x*30:0);
+  animPlayers(dt);
+  if((state==='ready'||state==='windup')&&pitcherP.gripR){ball.position.copy(pitcherP.gripR);pitcherP.g.localToWorld(ball.position);} // ball sits in this frame's palm
+  updateCamera(dt);
+}
+function loop(){const dt=Math.min(clock.getDelta(),.05);update(dt);renderer.render(scene,camera);requestAnimationFrame(loop);}
+setBatterLook(0);setMode('bat');loop();
+</script>
+</body>
+</html>
