@@ -303,9 +303,12 @@ function setPose(p,src){const j=p.cur,L=LEN;for(const k in j)if(src[k])j[k].copy
   _side.subVectors(j.lSh,j.rSh);_side.addScaledVector(_up,-_side.dot(_up)).normalize();_fwd.crossVectors(_side,_up);
   p.torso.matrix.makeBasis(_side,_t.copy(_up).multiplyScalar(tu+.03),_fwd).setPosition(j.chest);
   _u2.subVectors(j.head,j.neck).normalize();
-  if(p.look){_f2.subVectors(p.look,j.head);_f2.addScaledVector(_u2,-_f2.dot(_u2));}
-  if(p.look&&_f2.lengthSq()>1e-6&&_f2.normalize().dot(_fwd)>-.2){_s2.crossVectors(_u2,_f2);_m.makeBasis(_s2,_u2,_f2);}
-  else{_f2.copy(_fwd).addScaledVector(_u2,-_fwd.dot(_u2)).normalize();_s2.crossVectors(_u2,_f2);_m.makeBasis(_s2,_u2,_f2);}
+  // head: torso-forward, turned toward the look target as far as it is in front; eased frame to frame so it never snaps
+  _t.copy(_fwd).addScaledVector(_u2,-_fwd.dot(_u2)).normalize();_f2.copy(_t);
+  if(p.look){_s2.subVectors(p.look,j.head);_s2.addScaledVector(_u2,-_s2.dot(_u2));
+    if(_s2.lengthSq()>1e-6){_s2.normalize();const w=smooth(clamp((_s2.dot(_t)+.6)/.6));_f2.lerp(_s2,w);if(_f2.lengthSq()<1e-4)_f2.copy(_t);_f2.normalize();}}
+  if(p.hfs){p.hfs.lerp(_f2,.3);p.hfs.addScaledVector(_u2,-p.hfs.dot(_u2));if(p.hfs.lengthSq()>1e-4){p.hfs.normalize();_f2.copy(p.hfs);}else p.hfs.copy(_f2);}else p.hfs=_f2.clone();
+  _s2.crossVectors(_u2,_f2);_m.makeBasis(_s2,_u2,_f2);
   p.head.quaternion.setFromRotationMatrix(_m);p.head.position.copy(j.head);(p.hu||(p.hu=V())).copy(_u2);(p.hf||(p.hf=V())).copy(_f2);
   _up.subVectors(j.chest,j.pelv);const tl=_up.length();_up.divideScalar(tl);
   _side.subVectors(j.lHip,j.rHip);_side.addScaledVector(_up,-_side.dot(_up)).normalize();_fwd.crossVectors(_side,_up);
@@ -420,7 +423,8 @@ function rigPose(p,j){const R=p.rig,B=R.bones,dir=(a,b)=>V().subVectors(b,a).nor
   for(const s of['L','R']){const W=gpos('hand'+s),hq=R.cur['hand'+s],hd=V(0,1,0).applyQuaternion(hq),pn=R.hand[s].pn.clone().applyQuaternion(hq);
     p['grip'+s].copy(W).addScaledVector(hd,GRIP).addScaledVector(pn,.028);
     if(s==='R')(p.ballPt||(p.ballPt=V())).copy(gpos('f_index03R')).add(gpos('f_middle03R')).add(gpos('thumb03R')).multiplyScalar(1/3).addScaledVector(pn,.032).addScaledVector(hd,.012);}  // cradled against the fingertips and thumb
-  if(p.bat){const hh=V().subVectors(p.gripR,p.gripL);if(hh.length()>.1&&hh.dot(bd)>0)bd.copy(hh.normalize()); // bat runs through both palms
+  if(p.bat){const hh=V().subVectors(p.gripR,p.gripL),hl=hh.length();  // bat runs through both palms, faded in by how far apart they are
+    if(hl>1e-4){hh.divideScalar(hl);const w=smooth(clamp((hl-.07)/.06))*smooth(clamp(hh.dot(bd)/.6));bd.lerp(hh,w).normalize();}
     p.bat.quaternion.setFromUnitVectors(UP,bd);p.bat.position.copy(p.gripL).addScaledVector(bd,-.06);}
   if(p.o.glove){p.hL.position.copy(p.gripL);p.hL.quaternion.setFromUnitVectors(UP,dir(gpos('forearmL'),gpos('handL')));}
   const hb=B['spine005'];_gp.copy(R.headC).applyMatrix4(hb.matrixWorld);p.head.position.copy(p.g.worldToLocal(_gp));
@@ -495,7 +499,7 @@ const blob=new THREE.Mesh(new THREE.CircleGeometry(.12,16),new THREE.MeshBasicMa
 const TRAILN=2000,trailPos=new Float32Array(TRAILN*3),trailGeo=new THREE.BufferGeometry();trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPos,3));
 const trail=new THREE.Line(trailGeo,new THREE.LineBasicMaterial({color:0xfff2b0,transparent:true,opacity:.85}));trail.frustumCulled=false;scene.add(trail);let trailN=0;
 const landMark=new THREE.Mesh(new THREE.RingGeometry(.9,1.3,32),new THREE.MeshBasicMaterial({color:0xff4d2e,side:THREE.DoubleSide}));landMark.rotation.x=-Math.PI/2;landMark.visible=false;scene.add(landMark);
-const overlay=(m)=>{m.depthTest=false;m.transparent=true;return m;};
+const overlay=(m)=>{m.depthTest=false;m.transparent=true;m.side=THREE.DoubleSide;return m;};  // seen from both the batter's and the pitcher's side
 // bat-shaped cursor: wooden bat silhouette, sweet spot of the barrel at the aim point, handle toward the batter; tilts with pitch height
 const BAT_X0=-.58,BAT_X1=.07;
 const batRad=x=>x<-.555?.03:x<-.33?.017:x<-.07?.017+(.052-.017)*smooth((x+.33)/.26):.052;
@@ -701,7 +705,7 @@ function animPlayers(dt){
     for(const k of['lHa','rHa','lEl','rEl'])b[k].y+=dy;
     const yaw=((keys.d?1:0)-(keys.a?1:0))*-.35;b.bat.set(Math.sin(yaw)+.1,.04,Math.cos(yaw));}
   else if(key==='flinch'){lerpPose(BFL,BFL,0,b);b._m=0;fillAux(b);}
-  else{sampleClip(SW,Ld*LOAD_END,b);batDir(Ld*LOAD_END,b.bat);if(Ld===0){const w=Math.sin(now*2.2)*.09;b.bat.x+=w;b.bat.z-=w*.4;const br=Math.sin(now*1.6)*.006;b.head.y+=br;b.neck.y+=br;}}
+  else{sampleClip(SW,Ld*LOAD_END,b);batDir(Ld*LOAD_END,b.bat);{const w=Math.sin(now*2.2)*.09*clamp(1-Ld*5);b.bat.x+=w;b.bat.z-=w*.4;/* waggle fades out as the load starts */const br=Math.sin(now*1.6)*.006;b.head.y+=br;b.neck.y+=br;}}
   blendIn(p);
   // eyes on the ball (in the pitcher's hand, in flight, or batted)
   p.g.updateMatrixWorld();p.look=p.look||V();p.look.copy(ball.position);p.g.worldToLocal(p.look);if(p.look.x<.3&&state!=='hit')p.look.set(18,1.6,0);
@@ -729,10 +733,10 @@ function updateCamera(dt){
   if(state==='hit'&&hb){const b=ball.position,d=V(b.x,0,b.z);if(d.length()<1)d.set(0,0,-1);d.normalize();
     camGoal.set(b.x-d.x*20,Math.max(5,b.y*.6+5),b.z-d.z*20);if(camGoal.z>9)camGoal.z=9;lookGoal.copy(b);}
   else if(mode==='bat'){camGoal.set(.3,1.25,3.9);lookGoal.set(0,1.0,-18);}
-  else{camGoal.set(0,3.0,-24.2);lookGoal.set(0,.9,0);}
+  else{camGoal.set(.25,2.75,-22.4);lookGoal.set(0,.5,0);}  // just behind and above the pitcher, telephoto on the plate
   const k=camSnap?1:1-Math.exp(-(state==='hit'?3.5:5)*dt),kl=camSnap?1:1-Math.exp(-9*dt);camSnap=false;
   camPos.lerp(camGoal,k);camLook.lerp(lookGoal,kl);camera.position.copy(camPos);camera.lookAt(camLook);
-  const fov=state==='hit'?50:mode==='bat'?38:30;if(Math.abs(camera.fov-fov)>.01){camera.fov+=(fov-camera.fov)*Math.min(1,dt*4);camera.updateProjectionMatrix();}
+  const fov=state==='hit'?50:mode==='bat'?38:24;if(Math.abs(camera.fov-fov)>.01){camera.fov+=(fov-camera.fov)*Math.min(1,dt*4);camera.updateProjectionMatrix();}
 }
 
 // ---------- main loop ----------
@@ -741,7 +745,7 @@ function update(dt){now+=dt;
   if(state!=='hit'){ray.setFromCamera(mouse,camera);if(ray.ray.intersectPlane(zplane,_w)){
     if(mode==='bat')aim.set(clamp(_w.x,-.75,.75),clamp(_w.y,.2,1.6),0);else if(!charging||true)aim.set(clamp(_w.x,-.9,.9),clamp(_w.y,.1,1.8),0);}}
   cursor.visible=mode==='bat'&&state!=='hit';reticle.visible=mode==='pitch'&&(state==='ready');zone.visible=state!=='hit';
-  cursor.position.copy(aim);batC.rotation.z=batTilt(aim.y);reticle.position.copy(aim);
+  cursor.position.copy(aim);batC.rotation.z=batTilt(aim.y);reticle.position.copy(aim);reticle.scale.setScalar(2);
   pmark.visible=mode==='bat'&&!!pitch&&state==='flight'&&now<pitch.tArr+.15;
   if(pmark.visible){pmark.position.set(pitch.T.x,pitch.T.y,0);pmark.ring.scale.setScalar(1+4*clamp(1-(now-pitch.tRel)/pitch.dur));}
   $('buntBox').style.display=mode==='bat'&&bunting?'block':'none';
