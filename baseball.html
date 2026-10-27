@@ -2,10 +2,11 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#0a101c">
 <title>棒球 The Real</title>
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;color:#fff;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;color:#fff;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none;overscroll-behavior:none}
 canvas{display:block;cursor:crosshair}
 .panel{position:absolute;background:rgba(10,16,28,.78);border:1px solid rgba(255,255,255,.12);border-radius:8px;backdrop-filter:blur(4px)}
 #top{top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;padding:6px 16px;font-size:14px;white-space:nowrap}
@@ -50,6 +51,50 @@ canvas{display:block;cursor:crosshair}
 #cards div{padding:6px 12px;min-width:150px}#cards div+div{border-left:1px solid #fff2}
 #cards em{font-style:normal;color:#ffb070;font-weight:700;margin-right:6px}
 #stam{height:6px;background:#1b2230;border-radius:3px;margin-top:4px;overflow:hidden}#stamFill{height:100%;background:#3fd36b}
+
+/* ---------- touch controls (phones / tablets) ---------- */
+#touch{display:none}
+body.touch #touch{display:block}
+body.touch canvas{cursor:default}
+.tbtn{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;border:2px solid rgba(255,255,255,.35);
+  background:rgba(10,16,28,.55);backdrop-filter:blur(4px);color:#fff;font-weight:800;font-size:15px;line-height:1.1;text-align:center;touch-action:none;pointer-events:auto}
+.tbtn small{font-size:10px;font-weight:600;letter-spacing:1px;opacity:.8}
+.tbtn.on,.tbtn:active{background:rgba(232,100,31,.85);border-color:#fff}
+#tSwing,#tPitch{width:104px;height:104px;right:calc(22px + env(safe-area-inset-right));bottom:calc(26px + env(safe-area-inset-bottom));font-size:20px}
+#tSwing{background:rgba(217,72,28,.7)}#tPitch{background:rgba(28,123,217,.7)}
+#tBunt{width:64px;height:64px;right:calc(136px + env(safe-area-inset-right));bottom:calc(30px + env(safe-area-inset-bottom));font-size:13px}
+#tRest{width:58px;height:58px;right:calc(140px + env(safe-area-inset-right));bottom:calc(36px + env(safe-area-inset-bottom));font-size:13px}
+#tDir{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(30px + env(safe-area-inset-bottom));display:none;gap:10px}
+#tDir .tbtn{position:static;width:58px;height:58px;font-size:20px}
+#tTop{position:absolute;top:calc(8px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));display:flex;gap:8px}
+#tTop .tbtn{position:static;width:auto;height:34px;border-radius:17px;padding:0 12px;flex-direction:row;font-size:13px;gap:4px}
+#tHint{position:absolute;left:0;right:0;bottom:calc(150px + env(safe-area-inset-bottom));text-align:center;font-size:13px;color:#fffc;text-shadow:0 1px 4px #000;pointer-events:none;transition:opacity .8s}
+body.touch #side{display:none}
+body.touch.help #side{display:block;top:calc(50px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));z-index:5}
+body.touch #modeBtn,body.touch .kb{display:none}
+body.touch #buntBox{bottom:calc(150px + env(safe-area-inset-bottom))}
+/* compact HUD on small or touch screens */
+@media (max-width:900px),(max-height:560px){
+  #top{top:calc(6px + env(safe-area-inset-top));gap:10px;padding:4px 10px;font-size:12px}
+  #modeTag{padding:2px 7px}
+  #speed{top:calc(6px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));padding:5px 10px;font-size:11px;min-width:0}#speed b{font-size:22px}
+  #hitBox{top:auto;bottom:calc(150px + env(safe-area-inset-bottom));right:calc(8px + env(safe-area-inset-right));width:170px;padding:7px 10px;font-size:11px}#hitBox h3{font-size:13px}#hitBox b{font-size:12px}
+  #msg{font-size:38px}#msg small{font-size:15px}
+  #pitchList{left:calc(8px + env(safe-area-inset-left));bottom:calc(10px + env(safe-area-inset-bottom));flex-direction:row;flex-wrap:wrap;max-width:calc(100vw - 190px);padding:5px;gap:4px}
+  #pitchList button{min-width:0;padding:6px 8px;font-size:12px;gap:5px}#pitchList small,#pitchList kbd{display:none}
+  #meterBox{bottom:auto;top:calc(44px + env(safe-area-inset-top));width:min(300px,70vw);padding:6px 10px;font-size:11px}#meter{height:12px}
+}
+/* portrait phones: top bar would overflow, stack it under the speed box */
+@media (max-width:520px){
+  #top{left:calc(8px + env(safe-area-inset-left));transform:none;top:calc(6px + env(safe-area-inset-top))}
+  #speed{top:calc(44px + env(safe-area-inset-top))}
+  #tTop{flex-direction:column;align-items:flex-end;top:calc(44px + env(safe-area-inset-top))}
+  #top{gap:7px;padding:4px 8px;font-size:11px}#modeTag .en{display:none}.cnt b{margin-left:4px}.cnt i{width:9px;height:9px}
+  #meterBox{top:auto;bottom:calc(150px + env(safe-area-inset-bottom));left:calc(8px + env(safe-area-inset-left));transform:none;width:calc(100vw - 160px)}
+  #tSwing,#tPitch{width:92px;height:92px}#tBunt{right:calc(122px + env(safe-area-inset-right))}
+  #tRest{right:calc(38px + env(safe-area-inset-right));bottom:calc(132px + env(safe-area-inset-bottom))}
+  #pitchList{max-width:calc(100vw - 136px)}#tHint{bottom:calc(210px + env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
@@ -61,8 +106,17 @@ canvas{display:block;cursor:crosshair}
 </div>
 <div id="speed" class="panel"></div><div id="msg"></div><div id="hitBox" class="panel"><h3 id="hbRes">擊球中…</h3><div><span>擊球初速 Exit velo</span><b id="hbExit"></b></div><div><span>仰角 Launch angle</span><b id="hbLa"></b></div><div><span>飛行距離 Distance</span><b id="hbDist"></b></div></div>
 <div id="pitchList" class="panel"></div>
-<div id="meterBox" class="panel"><div style="display:flex;justify-content:space-between"><span>投球力道 POWER（按住左鍵）</span><span id="mTxt"></span></div><div id="meter"><div id="mFill"></div><div id="mRed"></div></div></div>
-<div id="buntBox" class="panel">觸擊方向 BUNT &nbsp;<span id="bL">◀ A</span><span id="bC">●</span><span id="bR">D ▶</span></div>
+<div id="meterBox" class="panel"><div style="display:flex;justify-content:space-between"><span>投球力道 POWER<span class="kb">（按住左鍵）</span></span><span id="mTxt"></span></div><div id="meter"><div id="mFill"></div><div id="mRed"></div></div></div>
+<div id="buntBox" class="panel">觸擊方向 BUNT &nbsp;<span id="bL">◀</span><span id="bC">●</span><span id="bR">▶</span></div>
+<div id="touch">
+  <div id="tTop"><button class="tbtn" id="tMode">⇄ 投球</button><button class="tbtn" id="tMute">🔊</button><button class="tbtn" id="tHelp">?</button></div>
+  <div id="tHint">拖曳畫面移動球棒 · Drag to aim</div>
+  <button class="tbtn" id="tSwing">揮棒<small>SWING</small></button>
+  <button class="tbtn" id="tBunt">觸擊<small>BUNT</small></button>
+  <div id="tDir"><button class="tbtn" data-d="a">◀</button><button class="tbtn" data-d="">●</button><button class="tbtn" data-d="d">▶</button></div>
+  <button class="tbtn" id="tPitch">投球<small>HOLD</small></button>
+  <button class="tbtn" id="tRest">休息<small>REST</small></button>
+</div>
 <div id="cards" class="panel"><div><em id="bNum"></em><span id="bName"></span><br><small>打者 BATTER</small></div><div><em>#18</em>陳柏翰<br><small>投手 PITCHER · <span id="pc">0</span> 球</small><div id="stam"><div id="stamFill"></div></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -82,7 +136,9 @@ const rw=t=>99+23*Math.cos(2*clamp(t,-Math.PI/4,Math.PI/4)); // outfield wall ra
 
 // ---------- renderer / scene ----------
 const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0&&!matchMedia('(pointer:fine)').matches;
+if(TOUCH)document.body.classList.add('touch');
+renderer.setPixelRatio(Math.min(devicePixelRatio,TOUCH?1.5:2));   // phones/tablets: fewer pixels, steadier frame rate
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
@@ -102,7 +158,7 @@ scene.add(new THREE.HemisphereLight(0xe4f0ff,0x50703a,0.45));
    const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#4f86d0');gr.addColorStop(.46,'#dfeaf6');gr.addColorStop(.54,'#8fa577');gr.addColorStop(1,'#3e5a2c');g.fillStyle=gr;g.fillRect(0,0,w,h);})})));
  scene.environment=pm.fromScene(es,.04).texture;}
 const sun=new THREE.DirectionalLight(0xfff1dc,1.7);sun.position.set(-35,70,25);sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-26,right:26,top:26,bottom:-26,near:10,far:160});sun.shadow.bias=-0.0004;
+sun.shadow.mapSize.set(TOUCH?1024:2048,TOUCH?1024:2048);Object.assign(sun.shadow.camera,{left:-26,right:26,top:26,bottom:-26,near:10,far:160});sun.shadow.bias=-0.0004;
 sun.target.position.set(0,0,-10);scene.add(sun,sun.target);
 
 // ---------- field ----------
@@ -690,13 +746,16 @@ function newAB(){if(walkPending){walkPending=false;walkAdvance();}count.b=count.
 function next(){abOver?newAB():readyPitch();abOver=false;}
 function setMode(m){if(play&&!play.ended)finishPlay(true);mode=m;count.b=count.s=count.o=0;clearBases();readyPitch();
   catcherP.g.visible=umpP.g.visible=m==='pitch';
-  $('modeTag').textContent=m==='bat'?'打擊模式 BATTING':'投球模式 PITCHING';$('modeTag').style.background=m==='bat'?'#d9481c':'#1c7bd9';
+  $('modeTag').innerHTML=m==='bat'?'打擊<span class="en">模式 BATTING</span>':'投球<span class="en">模式 PITCHING</span>';$('modeTag').style.background=m==='bat'?'#d9481c':'#1c7bd9';
   $('modeBtn').textContent=m==='bat'?'切換到 投球模式 (M)':'切換到 打擊模式 (M)';
   $('pitchList').style.display=$('meterBox').style.display=m==='pitch'?'':'none';
   $('help').innerHTML=(m==='bat'?[['移動滑鼠','移動球棒打擊區'],['左鍵','揮棒 Swing'],['右鍵','觸擊姿勢 Bunt'],['A / D','觸擊方向'],['M','切換投球模式'],['N','音效開關 Sound']]
     :[['1 – 5','選擇球種'],['移動滑鼠','選擇進壘位置'],['按住左鍵','蓄力，放開投球'],['紅色區域','失投！(紅中/觸身)'],['R','休息，回復體力'],['M','切換打擊模式'],['N','音效開關 Sound']])
     .map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('');
-  camSnap=true;hud();}
+  $('tMode').textContent=m==='bat'?'⇄ 投球':'⇄ 打擊';$('tHint').textContent=m==='bat'?'拖曳畫面移動球棒 · Drag to aim the bat':'拖曳選擇位置，按住投球 · Drag to aim, hold to pitch';$('tHint').style.opacity=1;
+  for(const id of['tSwing','tBunt'])$(id).style.display=m==='bat'?'':'none';for(const id of['tPitch','tRest'])$(id).style.display=m==='pitch'?'':'none';
+  camSnap=true;aimReset=true;hud();}
+let aimReset=true;
 
 // ---------- HUD ----------
 $('pitchList').innerHTML=TYPES.map((t,i)=>`<button data-i="${i}"><kbd>${i+1}</kbd><span class="dot" style="background:${t.c}"></span>${t.zh} <small style="opacity:.6">${t.en} ${t.v}</small></button>`).join('');
@@ -716,6 +775,28 @@ cv.addEventListener('mousedown',e=>{SFX.init();
   if(state==='hit'&&play&&!play.ended&&e.button===0){finishPlay();return;}
   if(mode==='bat'){if(e.button===0)onSwing();else if(e.button===2&&state!=='hit'&&state!=='result'&&batterP.state!=='swing')bunting=!bunting;}
   else if(e.button===0&&state==='ready'){charging=true;meter=0;}});
+// ---------- touch: drag anywhere to move the bat / aim (relative, so the finger never covers it), buttons for the rest ----------
+{let tid=null,lx=0,ly=0,moved=0,t0=0;const SENS=1.35;
+  cv.addEventListener('touchstart',e=>{e.preventDefault();SFX.init();if(tid!==null)return;const t=e.changedTouches[0];tid=t.identifier;lx=t.clientX;ly=t.clientY;moved=0;t0=now;},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){if(t.identifier!==tid)continue;
+    const dx=t.clientX-lx,dy=t.clientY-ly;lx=t.clientX;ly=t.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+    mouse.x=clamp(mouse.x+dx*2*SENS/innerWidth,-1,1);mouse.y=clamp(mouse.y-dy*2*SENS/innerHeight,-1,1);
+    if(moved>30)$('tHint').style.opacity=0;}},{passive:false});
+  const end=e=>{for(const t of e.changedTouches){if(t.identifier!==tid)continue;tid=null;
+    if(moved<12&&state==='hit'&&play&&!play.ended)finishPlay();}};   // a tap during a play skips it
+  cv.addEventListener('touchend',end);cv.addEventListener('touchcancel',end);
+  const hold=(id,down,up)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();SFX.init();b.classList.add('on');try{b.setPointerCapture(e.pointerId);}catch(_){}down();});
+    const u=e=>{if(!b.classList.contains('on'))return;b.classList.remove('on');up&&up();};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);b.addEventListener('contextmenu',e=>e.preventDefault());};
+  hold('tSwing',()=>{if(state==='hit'&&play&&!play.ended)return finishPlay();onSwing();});
+  hold('tBunt',()=>{if(state!=='hit'&&state!=='result'&&batterP.state!=='swing')bunting=!bunting;});
+  hold('tPitch',()=>{if(state==='hit'&&play&&!play.ended)return finishPlay();if(state==='ready'){charging=true;meter=0;}},()=>{if(charging)throwPitch(false);});
+  hold('tRest',()=>{pitchCount=0;hud();flash('休息','STAMINA RESTORED');});
+  hold('tMode',()=>setMode(mode==='bat'?'pitch':'bat'));
+  hold('tMute',()=>{const m=SFX.toggle();$('tMute').textContent=m?'🔇':'🔊';});
+  hold('tHelp',()=>document.body.classList.toggle('help'));
+  $('tDir').querySelectorAll('button').forEach(b=>hold2(b));
+  function hold2(b){b.addEventListener('pointerdown',e=>{e.preventDefault();keys.a=b.dataset.d==='a';keys.d=b.dataset.d==='d';});}
+  $('tMute').textContent=SFX.muted?'🔇':'🔊';}
 addEventListener('mouseup',e=>{if(e.button===0&&mode==='pitch'&&charging)throwPitch(false);});
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;SFX.init();
@@ -894,7 +975,9 @@ function finishPlay(silent){const P=play;if(!P||P.ended)return;P.ended=true;
   if(silent)return;if(P.foul){if(count.s<2)count.s++;readyPitch();}else newAB();}
 
 // ---------- camera ----------
-const camPos=V(),camLook=V(),camGoal=V(),lookGoal=V();let camSnap=true,camHit=false;
+const camPos=V(),camLook=V(),camGoal=V(),lookGoal=V();let camSnap=true,camHit=false,camFov=40;
+// views are framed for 4:3 and wider; on narrower screens widen the vertical fov so the sides aren't cropped
+const fitFov=f=>{const a=camera.aspect,R=state==='hit'?4/3:mode==='bat'?.8:1.05;return a>=R?f:2*Math.atan(Math.tan(f*D2R/2)*R/a)/D2R;};
 const CAM_VMAX=14,_cv=V(); // seconds to glide back to the batting/pitching view after a play
 function updateCamera(dt){
   const hit=state==='hit'&&!!hb;
@@ -904,11 +987,11 @@ function updateCamera(dt){
     camGoal.set(b.x-d.x*18,Math.max(5,b.y*.6+5),b.z-d.z*18);if(camGoal.z>9)camGoal.z=9;lookGoal.copy(b);fov=50;}
   else if(mode==='bat'){camGoal.set(.3,1.25,3.9);lookGoal.set(0,1.0,-18);fov=38;}
   else{camGoal.set(PCAM.x,PCAM.y,PCAM.z);lookGoal.copy(PLOOK);fov=PFOV;}  // far behind the (offset) pitcher, long lens
-  if(camSnap){camPos.copy(camGoal);camLook.copy(lookGoal);camera.fov=fov;camSnap=false;}
+  if(camSnap){camPos.copy(camGoal);camLook.copy(lookGoal);camFov=fov;camSnap=false;}
   else{const k=1-Math.exp(-(hit?2.2:5)*dt),kl=1-Math.exp(-(hit?8:9)*dt);
     if(hit){_cv.subVectors(camGoal,camPos).multiplyScalar(k);const mx=CAM_VMAX*dt;if(_cv.length()>mx)_cv.setLength(mx);camPos.add(_cv);}  // no lunges: speed-capped glide
-    else camPos.lerp(camGoal,k);camLook.lerp(lookGoal,kl);camera.fov+=(fov-camera.fov)*Math.min(1,dt*(hit?5:4));}
-  camera.position.copy(camPos);camera.lookAt(camLook);camera.updateProjectionMatrix();
+    else camPos.lerp(camGoal,k);camLook.lerp(lookGoal,kl);camFov+=(fov-camFov)*Math.min(1,dt*(hit?5:4));}
+  camera.fov=fitFov(camFov);camera.position.copy(camPos);camera.lookAt(camLook);camera.updateProjectionMatrix();
 }
 const PCAM=V(.9,2.65,-24.4),PLOOK=V(-.08,.85,.6),PFOV=9.5;
 
@@ -922,7 +1005,8 @@ function update(dt){now+=dt;
   pmark.visible=mode==='bat'&&!!pitch&&state==='flight'&&now<pitch.tArr+.15;
   if(pmark.visible){pmark.position.set(pitch.T.x,pitch.T.y,0);pmark.ring.scale.setScalar(1+4*clamp(1-(now-pitch.tRel)/pitch.dur));}
   $('buntBox').style.display=mode==='bat'&&bunting?'block':'none';
-  if(bunting){const bd=(keys.d?1:0)-(keys.a?1:0);$('bL').classList.toggle('on',bd<0);$('bC').classList.toggle('on',bd===0);$('bR').classList.toggle('on',bd>0);}
+  if(TOUCH){$('tDir').style.display=mode==='bat'&&bunting?'flex':'none';$('tBunt').classList.toggle('on',bunting);}
+  if(bunting){const bd=(keys.d?1:0)-(keys.a?1:0);if(TOUCH)$('tDir').querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.d==='a'&&bd<0)||(b.dataset.d==='d'&&bd>0)||(b.dataset.d===''&&bd===0)));$('bL').classList.toggle('on',bd<0);$('bC').classList.toggle('on',bd===0);$('bR').classList.toggle('on',bd>0);}
   if(mode==='pitch'){if(charging){meter+=dt/1.1;if(meter>=1-redSize()){meter=1-redSize();throwPitch(true);}}
     $('mFill').style.width=(meter*100)+'%';$('mTxt').textContent=charging?Math.round(clamp(meter/(1-redSize()))*100)+'%':'';}
   if(mode==='bat'&&state==='ready'&&now>=readyAt)cpuThrow();
@@ -948,6 +1032,7 @@ function update(dt){now+=dt;
   animPlayers(dt);if(play)animPlay(dt);
   if((state==='ready'||state==='windup')&&pitcherP.ballPt){ball.position.copy(pitcherP.ballPt);pitcherP.g.localToWorld(ball.position);} // ball sits in this frame's palm
   updateCamera(dt);
+  if(aimReset&&TOUCH){camera.updateMatrixWorld();const v=V(0,.75,0).project(camera);mouse.set(v.x,v.y);}aimReset=false;  // touch aims relatively: start on the zone
 }
 function loop(){const dt=Math.min(clock.getDelta(),.05);update(dt);renderer.render(scene,camera);requestAnimationFrame(loop);}
 setBatterLook(0);setMode('bat');loop();
