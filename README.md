@@ -6,9 +6,13 @@ A 3D baseball batting and pitching game that runs in the browser (three.js r128)
 
 Open `baseball.html` in Chrome. It needs internet the first time to load three.js from the CDN.
 
-- **M** switches between batting and pitching mode.
+You manage the **Hawks** against the CPU **Comets** in a nine-inning game. A coin toss decides who bats first; three outs switch sides. You bat when the Hawks are up and pitch when they're in the field. Fielding and baserunning are automatic, including double plays.
+
 - **Batting:** move the mouse to aim the bat, left-click to swing, right-click for the bunt stance, and hold A or D to aim the bunt.
-- **Pitching:** press 1–5 to pick a pitch, aim with the mouse, then hold the left button for power and release to throw. If the meter reaches the red zone, the pitch is a mistake. **R** rests the pitcher.
+- **Pitching:** press 1–5 to pick one of your pitcher's pitches, aim with the mouse, then hold the left button for power and release to throw. The red zone grows as he tires; reaching it throws a mistake. **B** opens the bullpen to change pitchers.
+- **N** toggles sound. On phones and tablets, use the on-screen buttons and drag to aim.
+
+Every player has ratings. Batters: contact (timing window and CPU contact rate), power (exit speed and lift), speed (running and range in the field) and eye (CPU chase rate). Pitchers: top velocity, control, stamina (pitches before tiring), stuff (break) and their own pitch mix. Starters go long, closers throw hardest. The CPU manager relieves tired pitchers and brings in its closer for a save.
 
 ## Layout
 

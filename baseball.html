@@ -19,7 +19,8 @@ canvas{display:block;cursor:crosshair}
 #side{top:10px;right:10px;width:240px;padding:12px;font-size:12.5px;line-height:1.65}
 #side h1{font-size:17px;margin:0 0 8px;letter-spacing:.5px}
 #side button,#pitchList button{font:inherit;cursor:pointer;border:0;border-radius:6px;color:#fff}
-#modeBtn{width:100%;padding:8px;background:#e8641f;font-weight:700;margin-bottom:8px}
+#side{width:auto;padding:8px 12px}#side h1{font-size:14px;margin:0;cursor:default}#side h1::after{content:' · 操作 ▾';font-weight:400;opacity:.6;font-size:12px}
+#help{display:none;margin-top:6px;width:230px}#side:hover #help,body.touch.help #help{display:block}
 #help div{display:flex;gap:8px}#help span:first-child{color:#ffb070;min-width:78px}
 #msg{position:absolute;top:30%;left:0;right:0;text-align:center;font-size:56px;font-weight:900;text-shadow:0 4px 18px rgba(0,0,0,.7);pointer-events:none;opacity:0}
 #msg small{display:block;font-size:22px;font-weight:600;letter-spacing:2px;margin-top:4px}
@@ -52,6 +53,37 @@ canvas{display:block;cursor:crosshair}
 #cards em{font-style:normal;color:#ffb070;font-weight:700;margin-right:6px}
 #stam{height:6px;background:#1b2230;border-radius:3px;margin-top:4px;overflow:hidden}#stamFill{height:100%;background:#3fd36b}
 
+/* ---------- game: score, intro, bullpen, coin toss, final ---------- */
+#runs{color:#fff;font-weight:600}#runs b{color:#ffd23a;font-size:16px;font-variant-numeric:tabular-nums}#runs .inn{color:#9fd3ff;font-weight:800;margin-right:4px}
+#intro{top:54px;left:50%;transform:translateX(-50%);padding:7px 14px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:1px;opacity:0;pointer-events:none;white-space:nowrap}
+#intro b{font-size:15px}#intro i{font-style:normal;color:#9fd3ff;margin-top:2px}#intro.show{animation:intro 4.5s ease forwards}
+@keyframes intro{0%{opacity:0}8%{opacity:1}80%{opacity:1}100%{opacity:0}}
+#pHead{font-size:12px;padding:2px 4px 4px;min-width:170px}#pHead em{font-style:normal;color:#ffb070;margin:0 4px}#pHead span{opacity:.8}
+.stam{height:5px;background:#1b2230;border-radius:3px;margin-top:4px;overflow:hidden}.stam i{display:block;height:100%}
+#pitchList button.off{opacity:.28;pointer-events:none}#penBtn{background:#6b3fa0!important;justify-content:center;font-weight:700}
+#pen{display:none;top:50%;left:50%;transform:translate(-50%,-50%);width:min(620px,94vw);max-height:84vh;overflow:auto;padding:14px 16px;z-index:20}
+#pen h3{margin:0 0 2px;color:#ffd23a}#pen p{margin:0 0 10px;font-size:12px;opacity:.75}
+#pen button{font:inherit;color:#fff;border:0;border-radius:7px;cursor:pointer}
+#penList{display:flex;flex-direction:column;gap:6px}
+.pr{display:grid;grid-template-columns:56px 1fr repeat(4,auto) 54px 92px;gap:8px;align-items:center;padding:8px 10px;background:#253044;text-align:left;font-size:12px}
+.pr em{font-style:normal;color:#ffb070;font-weight:700}.pr b{font-size:14px}.pr.cur{outline:2px solid #3fd36b}.pr.off{opacity:.45;cursor:default}.pr .st{text-align:right;opacity:.85}
+.pr .ars{display:flex;gap:3px}.pr .ars i{width:9px;height:9px;border-radius:50%}
+#penClose{margin-top:10px;width:100%;padding:9px;background:#3b4b6a}
+@media (max-width:640px){.pr{grid-template-columns:44px 1fr auto auto;font-size:11px}.pr span:nth-of-type(3),.pr span:nth-of-type(4){display:none}.pr .ars{display:none}}
+#start,#final{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,8,16,.55);z-index:30;backdrop-filter:blur(2px)}
+#final{display:none}
+#start .box,#final .box{position:static;padding:22px 26px;text-align:center;max-width:92vw}
+#start h1,#final h1{margin:0 0 6px;font-size:30px}.vs{margin:4px 0 12px}
+#start button,#final button{font:inherit;font-weight:700;color:#fff;border:0;border-radius:8px;padding:11px 20px;margin:4px;cursor:pointer;background:#e8641f}
+#coinBtns button{background:#253044}#playBall{display:none}
+#coinWrap{perspective:600px;height:110px;display:flex;justify-content:center;align-items:center}
+#coin{width:90px;height:90px;position:relative;transform-style:preserve-3d;transition:transform 1.7s cubic-bezier(.2,.7,.2,1)}
+#coin .f{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#5a3d00;
+  background:radial-gradient(circle at 35% 30%,#fff3b0,#e8b923 55%,#a77a06);box-shadow:inset 0 0 0 5px #c89412;backface-visibility:hidden}
+#coin .t{transform:rotateY(180deg)}#coinMsg{min-height:22px}
+#finalLine{margin:10px auto 14px;border-collapse:collapse;font-variant-numeric:tabular-nums}#finalLine td,#finalLine th{padding:4px 8px;border-bottom:1px solid #ffffff22;text-align:center}
+#finalLine th{text-align:left}
+@media (max-width:520px){#intro{top:calc(46px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));transform:none;white-space:normal;width:calc(100vw - 76px);box-sizing:border-box;font-size:11px;align-items:flex-start}#intro b{font-size:13px}}
 /* ---------- touch controls (phones / tablets) ---------- */
 #touch{display:none}
 body.touch #touch{display:block}
@@ -63,7 +95,7 @@ body.touch canvas{cursor:default}
 #tSwing,#tPitch{width:104px;height:104px;right:calc(22px + env(safe-area-inset-right));bottom:calc(26px + env(safe-area-inset-bottom));font-size:20px}
 #tSwing{background:rgba(217,72,28,.7)}#tPitch{background:rgba(28,123,217,.7)}
 #tBunt{width:64px;height:64px;right:calc(136px + env(safe-area-inset-right));bottom:calc(30px + env(safe-area-inset-bottom));font-size:13px}
-#tRest{width:58px;height:58px;right:calc(140px + env(safe-area-inset-right));bottom:calc(36px + env(safe-area-inset-bottom));font-size:13px}
+#tPen{width:58px;height:58px;right:calc(140px + env(safe-area-inset-right));bottom:calc(36px + env(safe-area-inset-bottom));font-size:13px}
 #tDir{position:absolute;left:calc(16px + env(safe-area-inset-left));bottom:calc(30px + env(safe-area-inset-bottom));display:none;gap:10px}
 #tDir .tbtn{position:static;width:58px;height:58px;font-size:20px}
 #tTop{position:absolute;top:calc(8px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));display:flex;gap:8px}
@@ -71,7 +103,7 @@ body.touch canvas{cursor:default}
 #tHint{position:absolute;left:0;right:0;bottom:calc(150px + env(safe-area-inset-bottom));text-align:center;font-size:13px;color:#fffc;text-shadow:0 1px 4px #000;pointer-events:none;transition:opacity .8s}
 body.touch #side{display:none}
 body.touch.help #side{display:block;top:calc(50px + env(safe-area-inset-top));right:calc(8px + env(safe-area-inset-right));z-index:5}
-body.touch #modeBtn,body.touch .kb{display:none}
+body.touch .kb,body.touch #penBtn{display:none}
 body.touch #buntBox{bottom:calc(150px + env(safe-area-inset-bottom))}
 /* compact HUD on small or touch screens */
 @media (max-width:900px),(max-height:560px){
@@ -92,7 +124,7 @@ body.touch #buntBox{bottom:calc(150px + env(safe-area-inset-bottom))}
   #top{gap:7px;padding:4px 8px;font-size:11px}#modeTag .en{display:none}.cnt b{margin-left:4px}.cnt i{width:9px;height:9px}
   #meterBox{top:auto;bottom:calc(150px + env(safe-area-inset-bottom));left:calc(8px + env(safe-area-inset-left));transform:none;width:calc(100vw - 160px)}
   #tSwing,#tPitch{width:92px;height:92px}#tBunt{right:calc(122px + env(safe-area-inset-right))}
-  #tRest{right:calc(38px + env(safe-area-inset-right));bottom:calc(132px + env(safe-area-inset-bottom))}
+  #tPen{right:calc(38px + env(safe-area-inset-right));bottom:calc(132px + env(safe-area-inset-bottom))}
   #pitchList{max-width:calc(100vw - 136px)}#tHint{bottom:calc(210px + env(safe-area-inset-bottom))}
 }
 </style>
@@ -101,21 +133,29 @@ body.touch #buntBox{bottom:calc(150px + env(safe-area-inset-bottom))}
 <div id="top" class="panel"><span id="modeTag">打擊模式 BATTING</span><div class="cnt" id="cnt"></div><span id="bases" class="bases"><i></i><i></i><i></i></span><span id="runs">得分 0</span><span id="pinfo">—</span></div>
 <div id="side" class="panel">
   <h1>棒球 The Real</h1>
-  <button id="modeBtn">切換到 投球模式 (M)</button>
   <div id="help"></div>
 </div>
+<div id="intro" class="panel"></div>
+<div id="pen" class="panel"><h3>牛棚 BULLPEN</h3><p id="penNote"></p><div id="penList"></div><button id="penClose">關閉 Close</button></div>
+<div id="start"><div class="box panel"><h1>棒球 The Real</h1>
+  <p class="vs"><b style="color:#7fb0ff">鷹 Hawks</b>（你 YOU）&nbsp;vs&nbsp; <b style="color:#ff7a7a">彗星 Comets</b>（電腦 CPU）</p>
+  <div id="coinWrap"><div id="coin"><div class="f">正</div><div class="f t">反</div></div></div>
+  <p id="coinMsg">擲硬幣決定先攻 · Call the coin toss — win it and you bat first</p>
+  <div id="coinBtns"><button data-c="0">正面 Heads</button><button data-c="1">反面 Tails</button></div>
+  <button id="playBall">開始比賽 Play ball!</button></div></div>
+<div id="final"><div class="box panel"><h1 id="finalTitle"></h1><table id="finalLine"></table><button onclick="location.reload()">再來一場 Play again</button></div></div>
 <div id="speed" class="panel"></div><div id="msg"></div><div id="hitBox" class="panel"><h3 id="hbRes">擊球中…</h3><div><span>擊球初速 Exit velo</span><b id="hbExit"></b></div><div><span>仰角 Launch angle</span><b id="hbLa"></b></div><div><span>飛行距離 Distance</span><b id="hbDist"></b></div></div>
 <div id="pitchList" class="panel"></div>
 <div id="meterBox" class="panel"><div style="display:flex;justify-content:space-between"><span>投球力道 POWER<span class="kb">（按住左鍵）</span></span><span id="mTxt"></span></div><div id="meter"><div id="mFill"></div><div id="mRed"></div></div></div>
 <div id="buntBox" class="panel">觸擊方向 BUNT &nbsp;<span id="bL">◀</span><span id="bC">●</span><span id="bR">▶</span></div>
 <div id="touch">
-  <div id="tTop"><button class="tbtn" id="tMode">⇄ 投球</button><button class="tbtn" id="tMute">🔊</button><button class="tbtn" id="tHelp">?</button></div>
+  <div id="tTop"><button class="tbtn" id="tMute">🔊</button><button class="tbtn" id="tHelp">?</button></div>
   <div id="tHint">拖曳畫面移動球棒 · Drag to aim</div>
   <button class="tbtn" id="tSwing">揮棒<small>SWING</small></button>
   <button class="tbtn" id="tBunt">觸擊<small>BUNT</small></button>
   <div id="tDir"><button class="tbtn" data-d="a">◀</button><button class="tbtn" data-d="">●</button><button class="tbtn" data-d="d">▶</button></div>
   <button class="tbtn" id="tPitch">投球<small>HOLD</small></button>
-  <button class="tbtn" id="tRest">休息<small>REST</small></button>
+  <button class="tbtn" id="tPen">牛棚<small>BULLPEN</small></button>
 </div>
 <div id="cards" class="panel"><div><em id="bNum"></em><span id="bName"></span><br><small>打者 BATTER</small></div><div><em>#18</em>陳柏翰<br><small>投手 PITCHER · <span id="pc">0</span> 球</small><div id="stam"><div id="stamFill"></div></div></div></div>
 
@@ -240,7 +280,7 @@ adTex.wrapS=THREE.RepeatWrapping;
     g.fillStyle='#fff';g.font='bold 92px system-ui';g.textAlign='center';g.fillText('棒球 THE REAL',w/2,120);
     g.font='bold 40px monospace';g.fillStyle='#9fd3ff';g.fillText('1 2 3 4 5 6 7 8 9   R  H  E',w/2+40,230);
     g.fillStyle='#ffd23a';g.fillText('HAWKS  0 0 0 0 0 0 0 0 0   0  0  0',w/2,290);g.fillText('COMETS 0 0 0 0 0 0 0 0 0   0  0  0',w/2,350);});
-  const sb=new THREE.Mesh(new THREE.PlaneGeometry(40,15.6),new THREE.MeshBasicMaterial({map:sbTex}));sb.position.set(0,38,-163);scene.add(sb);
+  globalThis.SBT=sbTex;const sb=new THREE.Mesh(new THREE.PlaneGeometry(40,15.6),new THREE.MeshBasicMaterial({map:sbTex}));sb.position.set(0,38,-163);scene.add(sb);
   const sbBack=new THREE.Mesh(new THREE.BoxGeometry(42,17.6,1.5),mat(0x20262e));sbBack.position.set(0,38,-163.9);scene.add(sbBack);
   for(const sx of[-1,1]){const fp=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,26,8),mat(0xffd23a,.5));fp.position.set(sx*70.3,13,-70.3);scene.add(fp);}
 })();
@@ -294,7 +334,7 @@ function makePlayer(o){
   const g=new THREE.Group(),p={g,o,state:'idle',t0:0,buf:mk(STAND),cur:mk(STAND),snap:mk(STAND),bt0:-9,bd:.2,mk:''};
   const mJ=cloth(o.jersey,o),mP=cloth(o.pants,o),mS=mat(o.skin,.55),mK=mat(0x141414,.35),mW=mat(0xf4f4f4,.5),mSo=cloth(o.sock);
   mJ.side=THREE.DoubleSide;
-  const mC=o.helmet?new THREE.MeshPhysicalMaterial({color:new THREE.Color(o.cap).convertSRGBToLinear(),roughness:.3,clearcoat:1,clearcoatRoughness:.08}):cloth(o.cap);
+  const mC=p.mC=o.helmet?new THREE.MeshPhysicalMaterial({color:new THREE.Color(o.cap).convertSRGBToLinear(),roughness:.3,clearcoat:1,clearcoatRoughness:.08}):cloth(o.cap);
   const add=(geo,m,par=g)=>{const x=new THREE.Mesh(geo,m);x.castShadow=true;x.receiveShadow=true;par.add(x);return x;};
   const L=LEN;
   const ua=lathe([[0,0],[.043,.005],[.05,.07],[.051,.13],[.045,.21],[.039,L.ua-.005],[0,L.ua]]),sleeve=lathe([[.072,-.02],[.07,.07],[.065,.15]]);
@@ -419,7 +459,7 @@ function dressPlayer(p){const o=p.o,m=THREE.SkeletonUtils.clone(RIG.root);m.quat
   const P=mesh.geometry.attributes.position,JI=mesh.geometry.attributes.skinIndex,WI=mesh.geometry.attributes.skinWeight,mw=Gm(mesh),sl=mesh.skeleton.bones;
   const ank=Gp(bones['footL']).y,belt=Gp(bones['thighL']).y-ank+.1,bp={};for(const n in bones)bp[n]=Gp(bones[n]);
   const uaL=bp['upper_armL'].distanceTo(bp['forearmL']),C=h=>new THREE.Color(h).convertSRGBToLinear();
-  const cJ=C(o.jersey),cP=C(o.pants),cS=C(o.skin),cSo=C(o.sock),cK=C(0x151515),cG=C(o.bgl||o.skin),col=new Float32Array(P.count*3);
+  const cJ=C(o.jersey),cP=C(o.pants),cS=C(o.skin),cSo=C(o.sock),cK=C(0x151515),cG=C(o.bgl||o.skin),col=new Float32Array(P.count*3),RG=[cK,cG,cS,cJ,cSo,cP],reg=new Uint8Array(P.count);
   const head=new THREE.Box3(),chest=[1e9,-1e9],chY=bp['spine003'].y;
   for(let i=0;i<P.count;i++){let bi=0,bw=-1;const ws=[WI.getX(i),WI.getY(i),WI.getZ(i),WI.getW(i)],js=[JI.getX(i),JI.getY(i),JI.getZ(i),JI.getW(i)];for(let k=0;k<4;k++)if(ws[k]>bw){bw=ws[k];bi=js[k];}
     const n=sl[bi].name,v=V().fromBufferAttribute(P,i).applyMatrix4(mw),y=v.y-ank;let c;
@@ -431,8 +471,8 @@ function dressPlayer(p){const o=p.o,m=THREE.SkeletonUtils.clone(RIG.root);m.quat
     else if(/shin/.test(n))c=y<.47?cSo:cP;
     else c=y<belt?cP:y<belt+.045?cK:cJ;
     if(/spine00[23]/.test(n)&&Math.abs(v.x)<.07&&Math.abs(v.y-chY)<.12){chest[0]=Math.min(chest[0],v.z);chest[1]=Math.max(chest[1],v.z);}
-    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
-  mesh.geometry.setAttribute('color',new THREE.BufferAttribute(col,3));
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;reg[i]=RG.indexOf(c);}
+  mesh.geometry.setAttribute('color',new THREE.BufferAttribute(col,3));p.reg=reg;p.colAttr=mesh.geometry.attributes.color;
   mesh.material=new THREE.MeshStandardMaterial({vertexColors:true,skinning:true,roughness:.78,envMapIntensity:.8});
   // primitive head extras (cap/helmet, eyes, mask) ride on the head bone
   const hc=head.getCenter(V()),hs=head.getSize(V());R.headC=hc.clone().applyMatrix4(Gm(bones['spine005']).invert());R.headS=hs.x/.176;
@@ -441,7 +481,7 @@ function dressPlayer(p){const o=p.o,m=THREE.SkeletonUtils.clone(RIG.root);m.quat
   const stick=(tex,w,h,z,flip)=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:tex,transparent:true,roughness:.8,polygonOffset:true,polygonOffsetFactor:-2}));
     pl.position.set(0,chY-.03,z).applyMatrix4(inv);pl.quaternion.copy(iq);if(flip)pl.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(UP,Math.PI));pl.scale.setScalar(1/s);chB.add(pl);return pl;};
   if(o.num&&chest[0]<1e8)p.numPlane=stick(numTex(o.num,o.name,o.jerseyHex,o.numColor),.24,.4,chest[0]-.006,true);
-  if(o.team&&chest[1]>-1e8)stick(chestTex(o.team,o.numColor),.24,.09,chest[1]+.006,false);
+  if(o.team&&chest[1]>-1e8)p.teamPlane=stick(chestTex(o.team,o.numColor),.24,.09,chest[1]+.006,false);
   p.g.rotation.y=yaw;p.g.position.copy(pos0);p.g.updateMatrixWorld(true);p.rig=R;
   setPose(p,p.cur);}
 const GRIP=.075; // wrist -> palm centre along the hand
@@ -544,7 +584,7 @@ const RELEASE_PT=(()=>{const d=sampleClip(PC,RELEASE,{});pitcherP.g.updateMatrix
 const catcherP=makePlayer(A(HOME,{skin:SKINS[2],num:2,name:'王凱',glove:1,mask:1,helmet:1}));catcherP.g.position.set(0,0,1.15);catcherP.g.rotation.y=Math.PI;
 const umpP=makePlayer({jersey:0x1b1f2a,pants:0x5a5d63,cap:0x111111,sock:0x111111,skin:SKINS[3],mask:1,belt:1});umpP.g.position.set(0,0,2.0);umpP.g.rotation.y=Math.PI;
 const fielders=[[17,-22],[9,-34],[-9,-34],[-17,-22],[-30,-76],[0,-92],[30,-76]].map(([x,z],i)=>{
-  const f=makePlayer(A(HOME,{skin:SKINS[i%4],glove:1}));f.g.position.set(x,0,z);f.g.rotation.y=Math.atan2(-x,-z);f.ph=Math.random()*6;return f;});
+  const f=makePlayer(A(HOME,{skin:SKINS[i%4],glove:1,num:10+i,name:''}));f.g.position.set(x,0,z);f.g.rotation.y=Math.atan2(-x,-z);f.ph=Math.random()*6;return f;});
 function setBatterLook(i){const [n,num]=LINEUP[i%LINEUP.length];$('bName').textContent=n;$('bNum').textContent='#'+num;
   batterP.o.num=num;batterP.o.name=n;const pl=batterP.numPlane||batterP.torso.children.find(c=>c.isMesh&&c.material.map);if(pl){pl.material.map.dispose();pl.material.map=numTex(num,n,AWAY.jerseyHex,'#fff');}}
 
@@ -608,9 +648,11 @@ const zone=new THREE.Group();
 const TYPES=[{zh:'四縫線速球',en:'4-Seam',v:148,bx:.02,by:.08,c:'#ff5a3c'},{zh:'曲球',en:'Curve',v:122,bx:.18,by:-.6,c:'#3cb4ff'},{zh:'滑球',en:'Slider',v:134,bx:.38,by:-.18,c:'#ffd23a'},
   {zh:'變速球',en:'Change',v:126,bx:-.14,by:-.3,c:'#7dff8a'},{zh:'伸卡球',en:'Sinker',v:143,bx:-.22,by:-.32,c:'#d58cff'}];
 function makePitch(ti,tx,ty,power,miss){
-  let t=TYPES[ti],kmh=t.v*(.86+.18*power),B=V(t.bx,t.by,0).multiplyScalar(.8+.4*power);
-  if(miss==='meat'){t=TYPES[0];kmh=t.v*.84;tx=(Math.random()-.5)*.06;ty=.8;B.set(0,.02,0);}
-  if(miss==='bean'){t=TYPES[0];kmh=t.v*.95;tx=-.7;ty=1.25;B.set(0,0,0);}
+  const pr=curPitcher(fieldT()),vk=pr.velo/148*(1-.06*clamp(fatigue(pr)-.8));   // his top velo, sagging when tired
+  let t=TYPES[ti],kmh=t.v*vk*(.88+.12*power),B=V(t.bx,t.by,0).multiplyScalar((.8+.4*power)*(.75+.5*pr.stuff/100));
+  if(miss==='meat'){t=TYPES[0];kmh=t.v*vk*.86;tx=(Math.random()-.5)*.06;ty=.8;B.set(0,.02,0);}
+  if(miss==='bean'){t=TYPES[0];kmh=t.v*vk*.95;tx=-.7;ty=1.25;B.set(0,0,0);}
+  pr.pc++;
   const P0=RELEASE_PT.clone(),T=V(tx,ty,0),sp=kmh/3.6;
   return {t,kmh,sp,P0,T,B,h:.22*(150/kmh)**2,dur:Math.max(.5,P0.distanceTo(T)/sp*1.3),miss,resolved:false};
 }
@@ -622,13 +664,42 @@ function pitchPos(p,u,o){
 const isStrike=T=>Math.abs(T.x)<.253&&T.y>.46&&T.y<1.09;
 const isHBP=T=>T.x<-.42&&T.y>.25&&T.y<1.9;
 
+// ---------- teams ----------
+// batters: [name, number, position, contact, power, speed, eye]   pitchers: [name, number, role, top velo km/h, control, stamina (pitches), stuff, pitch types]
+const POS_ZH={C:'捕手','1B':'一壘手','2B':'二壘手','3B':'三壘手',SS:'游擊手',LF:'左外野手',CF:'中外野手',RF:'右外野手',DH:'指定打擊'};
+const ROLE_ZH={SP:'先發',LR:'長中繼',RP:'中繼',SU:'布局',CL:'終結者'};
+const TEAMS=[
+  {name:'Hawks',zh:'鷹',U:AWAY,col:'#7fb0ff',
+   lineup:[['陳宇翔',1,'CF',82,38,92,76],['林冠廷',4,'2B',78,45,76,70],['張家豪',6,'SS',80,64,66,72],['王大軍',25,'1B',66,96,34,62],['李承翰',34,'DH',62,86,40,55],
+           ['黃志明',13,'3B',68,62,52,58],['吳俊傑',21,'LF',64,55,70,52],['劉威霖',22,'C',55,52,32,50],['蔡宗祐',9,'RF',61,42,80,56]],
+   staff:[['陳柏翰',18,'SP',150,74,100,72,[0,1,2,3]],['何俊男',47,'LR',143,80,45,60,[0,1,3,4]],['鄭文彬',41,'RP',147,68,30,66,[0,2,4]],
+          ['郭子豪',56,'RP',145,72,30,70,[0,1,3]],['楊瀚霆',63,'SU',153,68,25,76,[0,2,3]],['江承浩',99,'CL',157,66,22,80,[0,2,4]]]},
+  {name:'Comets',zh:'彗星',U:HOME,col:'#ff7a7a',
+   lineup:[['許立恆',7,'SS',80,36,90,74],['周品辰',2,'CF',76,48,84,68],['謝明哲',10,'RF',79,68,62,73],['羅大鵬',44,'1B',64,94,30,60],['高志遠',31,'3B',66,82,45,58],
+           ['潘冠宇',17,'DH',63,74,42,54],['曾子軒',23,'LF',65,56,68,55],['王凱',12,'C',56,50,30,52],['葉書豪',3,'2B',70,40,78,60]],
+   staff:[['范振宇',11,'SP',148,78,100,74,[0,1,3,4]],['邱韋傑',35,'LR',141,78,45,62,[0,1,3]],['蘇凱文',52,'RP',146,70,30,68,[0,2,4]],
+          ['簡志豪',58,'RP',149,64,28,72,[0,2]],['戴銘宏',66,'SU',152,70,25,75,[0,2,3]],['廖國雄',88,'CL',156,68,22,82,[0,1,2]]]}];
+for(const T of TEAMS){T.lineup=T.lineup.map(([n,num,pos,con,pow,spd,eye])=>({n,num,pos,con,pow,spd,eye,ab:0,h:0,hr:0,bb:0}));
+  T.staff=T.staff.map(([n,num,role,velo,ctrl,stam,stuff,ars])=>({n,num,role,velo,ctrl,stam,stuff,ars,pc:0,used:false}));}
+const USER=0;   // you manage the Hawks
+const G={inn:1,half:0,home:1,score:[0,0],line:[[],[]],hits:[0,0],order:[0,0],pit:[0,0],started:false,over:false};
+const batT=()=>G.half===0?1-G.home:G.home,fieldT=()=>1-batT();
+const curBat=()=>TEAMS[batT()].lineup[abIdx%9],curPitcher=t=>TEAMS[t].staff[G.pit[t]],fatigue=pr=>pr.pc/pr.stam;
+const runSpd=pl=>pl?6.2+1.6*pl.spd/100:RUN_V;
+
 // ---------- game state ----------
-let mode='bat',state='ready',now=0,readyAt=0,pitch=null,pending=null,bunting=false,charging=false,meter=0,pitchCount=0,selType=0;
+let mode='bat',state='ready',now=0,readyAt=0,pitch=null,pending=null,bunting=false,charging=false,meter=0,selType=0,penOpen=false;
 let abOver=false,resultUntil=0,hb=null,cpuPlan=null;const count={b:0,s:0,o:0},keys={},mouse=new THREE.Vector2(),aim=V(0,.8,0);
 const ray=new THREE.Raycaster(),zplane=new THREE.Plane(V(0,0,1),0);
-const redSize=()=>Math.min(.62,.08+.035*pitchCount);
+// the power meter's red zone grows as your pitcher tires: slowly up to his stamina, fast beyond it
+const redSize=()=>{const f=fatigue(curPitcher(USER));return Math.min(.62,.08+.16*Math.min(1,f)+.8*Math.max(0,f-1));};
 
 // ---------- sound (all synthesized with Web Audio; no files) ----------
+// the clearest installed English voice (natural male voices first), picked once the browser lists them
+let UV=null;function umpVoice(){if(UV)return UV;const vs=(window.speechSynthesis?speechSynthesis.getVoices():[]).filter(v=>/^en[-_]/i.test(v.lang));if(!vs.length)return null;
+  for(const r of[/Aaron/,/\bAlex\b/,/Daniel/,/Microsoft (Guy|Andrew|Brian|Davis|Christopher)/,/Google US English/,/Microsoft David/,/Samantha/,/Natural/])
+    {const v=vs.find(x=>r.test(x.name));if(v)return UV=v;}return UV=vs.find(x=>/en[-_]US/i.test(x.lang))||vs[0];}
+if(window.speechSynthesis)speechSynthesis.onvoiceschanged=()=>{UV=null;umpVoice();};
 const SFX=(()=>{let C=null,M,crowdG,crowdF,noise,muted=false,excite=0;
   try{muted=localStorage.getItem('theReal.muted')==='1';}catch(e){}
   function init(){if(C)return C.state==='suspended'&&C.resume();const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
@@ -661,37 +732,40 @@ const SFX=(()=>{let C=null,M,crowdG,crowdF,noise,muted=false,excite=0;
       crowdG.gain.setTargetAtTime(.05+level*.35,T(),.12);},
     groan(){if(!C)return;crowdF.frequency.setTargetAtTime(350,T(),.1);crowdF.frequency.setTargetAtTime(700,T()+1.2,.8);crowdG.gain.setTargetAtTime(.12,T(),.1);},
     organ(){if(!ok())return;[392,523,659,784,659,784].forEach((f,i)=>{const d=i===5?.7:.16;for(const h of[1,2,4])tone(f*h,f*h*.999,d,.09/h,'square',i*.17);});},
-    say(txt){if(muted||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='en-US';u.rate=1.05;u.pitch=.7;u.volume=.9;speechSynthesis.speak(u);}};
+    say(txt){if(muted||!window.speechSynthesis)return;const S=speechSynthesis;if(S.speaking||S.pending)S.cancel();
+      const u=new SpeechSynthesisUtterance(txt);u.lang='en-US';const v=umpVoice();if(v)u.voice=v;u.rate=.95;u.pitch=1;u.volume=.55;S.speak(u);}};
 })();
 // umpire / announcer lines and crowd reactions, keyed by the English result label
-const CALLS={'STRIKE':['Strike!'],'SWING & MISS':['Strike!'],'BUNT MISSED':['Strike!'],'STRIKEOUT':['Strike three!',-1],'BALL':['Ball.'],'WALK':['Ball four!',.25],
-  'HIT BY PITCH':['Take your base!',-.3],'FOUL BALL':['Foul ball!',.3],'FLY OUT':['Out!',-1],'OUT':['Out!',-1],'GROUND OUT':['Out!',-1],'FORCE OUT':['Out!',-1],
-  'SINGLE':[null,.5],'DOUBLE':[null,.7],'TRIPLE':[null,.85],'INSIDE-THE-PARK HR':[null,1],'HOME RUN':[null,1],'SIDE RETIRED':['Side retired!']};
+const CALLS={'STRIKE':['Strike'],'SWING & MISS':['Strike'],'BUNT MISSED':['Strike'],'STRIKEOUT':['Strike three',-1],'BALL':['Ball'],'WALK':['Ball four',.25],
+  'HIT BY PITCH':['Take your base',-.3],'FOUL BALL':['Foul ball',.3],'FLY OUT':["He's out",-1],'OUT':["He's out",-1],'GROUND OUT':["He's out",-1],'FORCE OUT':["He's out",-1],
+  'DOUBLE PLAY':['Double play',-1],'SINGLE':[null,.5],'DOUBLE':[null,.7],'TRIPLE':[null,.85],'INSIDE-THE-PARK HR':[null,1],'HOME RUN':[null,1]};
 function sayResult(small){const c=CALLS[small];if(!c)return;if(c[0])SFX.say(c[0]);if(c[1]===-1)SFX.groan();else if(c[1])SFX.cheer(c[1],c[1]>=1?5:2.5);if(small==='HOME RUN')SFX.organ();}
 function flash(big,small){sayResult(small);const m=$('msg');m.innerHTML=big+(small?`<small>${small}</small>`:'');m.classList.remove('show');void m.offsetWidth;m.classList.add('show');}
 function result(big,small,end){flash(big,small);state='result';resultUntil=now+1.7;abOver=end;
   if(pitch)$('pinfo').textContent=`${Math.round(pitch.kmh)} km/h · ${pitch.t.zh}`;hud();}
-function strikeCall(big,small){count.s++;if(count.s>=3){count.o++;result('三振出局','STRIKEOUT',true);}else result(big,small,false);}
-function ballCall(){count.b++;if(count.b>=4){walkPending=true;result('四壞球保送','WALK',true);}else result('壞球','BALL',false);}
+function strikeCall(big,small){count.s++;if(count.s>=3){count.o++;recordPA('K');result('三振出局','STRIKEOUT',true);}else result(big,small,false);}
+function ballCall(){count.b++;if(count.b>=4){walkPending=true;recordPA('BB');result('四壞球保送','WALK',true);}else result('壞球','BALL',false);}
 function callPitch(){pitch.resolved=true;const T=pitch.T;
-  if(isHBP(T)){walkPending=true;return result('觸身球','HIT BY PITCH',true);}
+  if(isHBP(T)){walkPending=true;recordPA('BB');return result('觸身球','HIT BY PITCH',true);}
   isStrike(T)?strikeCall('好球','STRIKE'):ballCall();}
 
 function startPitch(p){pitch=p;state='windup';p.tRel=now+RELEASE;p.tArr=p.tRel+p.dur;pitcherP.state='pitch';pitcherP.t0=now;pending=null;cpuPlan=null;}
-function cpuThrow(){const inZ=Math.random()<.6;let tx,ty;
+function cpuThrow(){const pr=curPitcher(fieldT()),f=fatigue(pr),wild=.02+.13*(1-pr.ctrl/100)+.06*Math.max(0,f-1),inZ=Math.random()<.45+.25*pr.ctrl/100;let tx,ty;
   if(inZ){tx=(Math.random()-.5)*.4;ty=.52+Math.random()*.5;}else{const s=Math.random();
     if(s<.5){tx=(Math.random()<.5?-1:1)*(.3+Math.random()*.2);ty=.4+Math.random()*.8;}else{tx=(Math.random()-.5)*.5;ty=Math.random()<.5?.3:1.25;}}
-  const miss=Math.random()<.05?(Math.random()<.6?'meat':'bean'):'';
-  startPitch(makePitch(Math.random()*TYPES.length|0,tx,ty,.4+Math.random()*.55,miss));}
+  tx=Math.max(-.4,tx+gauss()*wild);ty+=gauss()*wild;   // misses inside stop short of the batter (bean balls are their own thing)
+  const miss=Math.random()<.025+.08*Math.max(0,f-.9)?(Math.random()<.6?'meat':'bean'):'';
+  const a=pr.ars,ti=Math.random()<.45?a[0]:a[1+(Math.random()*(a.length-1)|0)];   // fastball-heavy mix from his own arsenal
+  startPitch(makePitch(ti,tx,ty,.45+Math.random()*.55,miss));}
 function throwPitch(missed){if(!charging)return;charging=false;let tx=aim.x,ty=aim.y,miss='';const power=clamp(meter/(1-redSize()));
   if(missed){miss=Math.random()<.5?'meat':'bean';flash('失投！',miss==='meat'?'紅中直球 MEATBALL':'觸身球 BEAN BALL');}
-  else{const s=.02+.06*power*power;tx+=gauss()*s;ty+=gauss()*s;}
-  startPitch(makePitch(selType,tx,ty,power,miss));pitchCount++;meter=0;hud();}
-function planCPU(p){const inZ=isStrike(p.T),meat=p.miss==='meat';
+  else{const s=(.02+.06*power*power)*(1.45-.9*curPitcher(USER).ctrl/100);tx+=gauss()*s;ty+=gauss()*s;}
+  startPitch(makePitch(selType,tx,ty,power,miss));meter=0;hud();}
+function planCPU(p){const inZ=isStrike(p.T),meat=p.miss==='meat',pl=curBat();
   if(isHBP(p.T))return{swing:false};
-  if(Math.random()>(meat?.97:inZ?.68:.27))return{swing:false};
-  let cp=meat?.92:inZ?.62:.25;cp-=(p.kmh-135)/100*.6+Math.hypot(p.B.x,p.B.y)*.25;
-  if(Math.random()<cp){const w=meat?.4:.85;return{swing:true,contact:true,tn:(Math.random()*2-1)*w,xn:(Math.random()*2-1)*.6,yn:(Math.random()*2-1)*.8+(meat?.25:0)};}
+  if(Math.random()>(meat?.97:inZ?.6+.15*pl.con/100:.46-.3*pl.eye/100))return{swing:false};   // good eyes don't chase
+  let cp=(meat?.92:inZ?.62:.25)+(pl.con-65)/100*.6;cp-=(p.kmh-135)/100*.6+Math.hypot(p.B.x,p.B.y)*.25;
+  if(Math.random()<cp){const w=(meat?.4:.85)*(1.25-.5*pl.con/100);return{swing:true,contact:true,tn:(Math.random()*2-1)*w,xn:(Math.random()*2-1)*.6,yn:(Math.random()*2-1)*.8+(meat?.25:0)};}
   return{swing:true,contact:false,tn:(Math.random()<.5?-1:1)*(1.1+Math.random()*.8)};}
 
 function startSwing(p){if(p.state==='swing'&&now-p.t0<SWING_DUR*1.6)return false;p.state='swing';p.t0=now;SFX.swing();return true;}
@@ -699,16 +773,16 @@ function onSwing(){if(state==='hit'||state==='result')return;bunting=false;if(!s
   if(pitch&&!pitch.resolved&&!pending)pending={tcon:now+CONTACT_T};}
 function resolveSwing(){const pd=pending;pending=null;if(!pitch||pitch.resolved)return;
   if(pd.cpu){const pl=pd.plan;return pl.contact?contact(pl.tn,pl.xn,pl.yn):strikeCall('揮棒落空','SWING & MISS');}
-  const tn=(pitch.tArr-pd.tcon)/.09,bt=batTest(pitch.T);
+  const tn=(pitch.tArr-pd.tcon)/(.07+.04*curBat().con/100),bt=batTest(pitch.T);   // contact hitters get a wider timing window
   if(Math.abs(tn)<=1&&bt)contact(tn,bt.xn,bt.yn);else strikeCall('揮棒落空','SWING & MISS');}
 function resolveBunt(){const bt=batTest(pitch.T);
   if(bt){const xn=bt.xn,yn=bt.yn;const bd=(keys.d?1:0)-(keys.a?1:0);
     launch(6+Math.random()*4,-6+yn*12+gauss()*3,bd*26+xn*8+gauss()*4,true);}
   else{bunting=false;strikeCall('觸擊失敗','BUNT MISSED');}}
 function contact(tn,xn,yn){
-  const q=Math.max(0,1-.55*Math.abs(tn)-.45*Math.hypot(xn*.8,yn));
-  const la=10+yn*38+gauss()*4,spray=-tn*55+xn*6+gauss()*5;
-  const v=(23+26*q)*(1-.4*Math.min(1,Math.abs(la-22)/70))+(pitch.sp-38)*.15;
+  const pl=curBat(),q=Math.max(0,1-.55*Math.abs(tn)-.45*Math.hypot(xn*.8,yn));
+  const la=10+yn*38+gauss()*4+(pl.pow-60)*.06,spray=-tn*55+xn*6+gauss()*5;   // sluggers lift the ball
+  const v=((23+26*q)*(1-.4*Math.min(1,Math.abs(la-22)/70))+(pitch.sp-38)*.15)*(.84+.3*pl.pow/100);
   launch(v,la,spray,false);}
 function launch(spd,la,spray,bunt){pitch.resolved=true;state='hit';if(bunt)SFX.bunt();else{SFX.crack((spd-18)/30);SFX.cheer(clamp((spd-25)/25)*.5,1.5);}
   const a=la*D2R,s=spray*D2R;ball.position.set(pitch.T.x,pitch.T.y,-.25);
@@ -742,36 +816,94 @@ function showPitch(p){const e=$('speed');e.innerHTML=`<b>${Math.round(p.kmh)}</b
   e.classList.add('show');$('pinfo').textContent=`${Math.round(p.kmh)} km/h · ${p.t.zh}`;}
 function readyPitch(){$('speed').classList.remove('show');state='ready';pitch=null;pending=null;bunting=false;hb=null;charging=false;meter=0;
   batterP.state='stance';readyAt=now+1.3;placePitcher();trail.visible=false;landMark.visible=false;blob.visible=false;$('hitBox').style.display='none';hud();}
-function newAB(){if(walkPending){walkPending=false;walkAdvance();}count.b=count.s=0;if(count.o>=3){count.o=0;clearBases();flash('三出局','SIDE RETIRED');}abIdx++;setBatterLook(abIdx);readyPitch();}
+function newAB(){if(walkPending){walkPending=false;walkAdvance();}
+  if(G.over)return;if(G.half===1&&G.inn>=9&&G.score[G.home]>G.score[1-G.home])return endGame();   // walk-off
+  count.b=count.s=0;if(count.o>=3)return endHalf();
+  abIdx++;G.order[batT()]=abIdx;cpuManage();setBatterLook(abIdx);readyPitch();}
+function endHalf(){G.order[batT()]=abIdx+1;count.o=0;const h=G.home,a=1-h;
+  if(G.inn>=9&&((G.half===0&&G.score[h]>G.score[a])||(G.half===1&&G.score[h]!==G.score[a])))return endGame();
+  if(G.half===0)G.half=1;else{G.half=0;G.inn++;}SFX.say('Side retired');beginHalf();}
+function beginHalf(){const bt=batT();abIdx=G.order[bt];G.line[bt][G.inn-1]=G.line[bt][G.inn-1]||0;
+  setMode(bt===USER?'bat':'pitch');applySide();cpuManage();setBatterLook(abIdx);readyAt=now+2.4;drawBoard();
+  if(G.started)flash(`${G.inn}局${G.half?'下':'上'}`,`${TEAMS[bt].zh}隊進攻 · ${bt===USER?'你打擊 YOU BAT':'你投球 YOU PITCH'}`);hud();}
+// dress both sides: the fielding team takes the field, the batting team bats and runs
+function applySide(){const F=TEAMS[fieldT()],B=TEAMS[batT()];
+  for(const d of DEF){wear(d.p,F.U);
+    if(d.role==='P'){const pr=curPitcher(fieldT());setJersey(d.p,pr.num,pr.n);continue;}
+    const pl=F.lineup.find(x=>x.pos===d.role);if(!pl)continue;setJersey(d.p,pl.num,pl.n);
+    d.spd=(/LF|CF|RF/.test(d.role)?7:6.5)-(d.role==='C'?.6:0)+1.3*pl.spd/100;}
+  wear(batterP,B.U);RUNNERS.forEach(r=>wear(r,B.U));}
+function addRun(P){const t=batT();G.score[t]++;G.line[t][G.inn-1]=(G.line[t][G.inn-1]||0)+1;if(P)P.runs=(P.runs||0)+1;drawBoard();hud();}
+function recordPA(k){const pl=curBat();if(k!=='BB')pl.ab++;if(k==='H'||k==='HR'){pl.h++;G.hits[batT()]++;}if(k==='HR')pl.hr++;if(k==='BB')pl.bb++;drawBoard();}
+function changePitcher(t,i){const S=TEAMS[t].staff;S[G.pit[t]].used=true;G.pit[t]=i;S[i].used=true;
+  if(t===fieldT())setJersey(pitcherP,S[i].num,S[i].n);
+  if(t===USER&&!S[i].ars.includes(selType))selType=S[i].ars[0];
+  flash('投手更換','PITCHING CHANGE');SFX.say('Pitching change');hud();}
+// the CPU manager: closer for a save in the 9th, otherwise relieve a tired arm
+function cpuManage(){const t=fieldT();if(t===USER)return;const S=TEAMS[t].staff,cur=S[G.pit[t]],lead=G.score[t]-G.score[1-t],free=r=>S.find(x=>!x.used&&x.role===r);
+  let w=null;if(G.inn>=9&&lead>0&&lead<=3&&cur.role!=='CL')w=free('CL');
+  if(!w&&fatigue(cur)>=1)w=(G.inn>=8&&lead>0&&free('SU'))||free('RP')||free('LR')||free('SU')||free('CL');
+  if(w)changePitcher(t,S.indexOf(w));}
+function endGame(){G.over=true;state='over';const h=G.home,a=1-h,win=G.score[USER]>G.score[1-USER];SFX.say('Ballgame');SFX.cheer(win?1:.3,5);drawBoard();
+  const row=t=>`<tr><th>${TEAMS[t].zh}</th>${Array.from({length:Math.max(9,G.inn)},(_,k)=>`<td>${G.line[t][k]??(k>=8&&t===h?'X':'')}</td>`).join('')}<td><b>${G.score[t]}</b></td><td>${G.hits[t]}</td></tr>`;
+  $('finalTitle').textContent=win?'勝利！ YOU WIN':'落敗 YOU LOSE';$('finalTitle').style.color=win?'#ffd23a':'#ff8a8a';
+  $('finalLine').innerHTML=`<tr><th></th>${Array.from({length:Math.max(9,G.inn)},(_,k)=>`<td>${k+1}</td>`).join('')}<td>R</td><td>H</td></tr>${row(a)}${row(h)}`;
+  $('final').style.display='flex';}
+// stadium scoreboard: line score, runs, hits
+function drawBoard(){if(!globalThis.SBT)return;const c=SBT.image,g=c.getContext('2d'),w=c.width,h=c.height,n=Math.max(9,G.inn),k0=n-9;
+  g.fillStyle='#0b1220';g.fillRect(0,0,w,h);g.strokeStyle='#ffd23a';g.lineWidth=8;g.strokeRect(4,4,w-8,h-8);
+  g.fillStyle='#fff';g.font='bold 76px system-ui';g.textAlign='center';g.fillText('棒球 THE REAL',w/2,100);
+  const X=k=>262+k*60;g.font='bold 38px monospace';g.fillStyle='#9fd3ff';
+  for(let k=0;k<9;k++)g.fillText(k0+k+1,X(k),200);g.fillText('R',X(9)+34,200);g.fillText('H',X(10)+34,200);
+  [1-G.home,G.home].forEach((t,r)=>{const y=270+r*70;g.textAlign='left';g.fillStyle=t===batT()&&!G.over?'#fff':'#ffd23a';g.fillText(TEAMS[t].name.toUpperCase(),32,y);g.textAlign='center';
+    for(let k=0;k<9;k++){const v=G.line[t][k0+k];g.fillStyle=G.inn-1===k0+k&&t===batT()&&!G.over?'#fff':'#ffd23a';g.fillText(v??(G.over&&k0+k>=8&&t===G.home?'X':''),X(k),y);}
+    g.fillStyle='#fff';g.fillText(G.score[t],X(9)+34,y);g.fillStyle='#ffd23a';g.fillText(G.hits[t],X(10)+34,y);});
+  SBT.needsUpdate=true;}
 function next(){abOver?newAB():readyPitch();abOver=false;}
 function setMode(m){if(play&&!play.ended)finishPlay(true);mode=m;count.b=count.s=count.o=0;clearBases();readyPitch();
   catcherP.g.visible=umpP.g.visible=m==='pitch';
   $('modeTag').innerHTML=m==='bat'?'打擊<span class="en">模式 BATTING</span>':'投球<span class="en">模式 PITCHING</span>';$('modeTag').style.background=m==='bat'?'#d9481c':'#1c7bd9';
-  $('modeBtn').textContent=m==='bat'?'切換到 投球模式 (M)':'切換到 打擊模式 (M)';
   $('pitchList').style.display=$('meterBox').style.display=m==='pitch'?'':'none';
-  $('help').innerHTML=(m==='bat'?[['移動滑鼠','移動球棒打擊區'],['左鍵','揮棒 Swing'],['右鍵','觸擊姿勢 Bunt'],['A / D','觸擊方向'],['M','切換投球模式'],['N','音效開關 Sound']]
-    :[['1 – 5','選擇球種'],['移動滑鼠','選擇進壘位置'],['按住左鍵','蓄力，放開投球'],['紅色區域','失投！(紅中/觸身)'],['R','休息，回復體力'],['M','切換打擊模式'],['N','音效開關 Sound']])
+  $('help').innerHTML=(m==='bat'?[['移動滑鼠','移動球棒打擊區'],['左鍵','揮棒 Swing'],['右鍵','觸擊姿勢 Bunt'],['A / D','觸擊方向'],['三出局','攻守交換'],['N','音效開關 Sound']]
+    :[['1 – 5','選擇球種'],['移動滑鼠','選擇進壘位置'],['按住左鍵','蓄力，放開投球'],['紅色區域','失投！(紅中/觸身)'],['B','牛棚換投 Bullpen'],['三出局','攻守交換'],['N','音效開關 Sound']])
     .map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('');
-  $('tMode').textContent=m==='bat'?'⇄ 投球':'⇄ 打擊';$('tHint').textContent=m==='bat'?'拖曳畫面移動球棒 · Drag to aim the bat':'拖曳選擇位置，按住投球 · Drag to aim, hold to pitch';$('tHint').style.opacity=1;
-  for(const id of['tSwing','tBunt'])$(id).style.display=m==='bat'?'':'none';for(const id of['tPitch','tRest'])$(id).style.display=m==='pitch'?'':'none';
+  $('tHint').textContent=m==='bat'?'拖曳畫面移動球棒 · Drag to aim the bat':'拖曳選擇位置，按住投球 · Drag to aim, hold to pitch';$('tHint').style.opacity=1;
+  for(const id of['tSwing','tBunt'])$(id).style.display=m==='bat'?'':'none';for(const id of['tPitch','tPen'])$(id).style.display=m==='pitch'?'':'none';
   camSnap=true;aimReset=true;hud();}
 let aimReset=true;
 
 // ---------- HUD ----------
-$('pitchList').innerHTML=TYPES.map((t,i)=>`<button data-i="${i}"><kbd>${i+1}</kbd><span class="dot" style="background:${t.c}"></span>${t.zh} <small style="opacity:.6">${t.en} ${t.v}</small></button>`).join('');
-$('pitchList').querySelectorAll('button').forEach(b=>b.onclick=e=>{selType=+b.dataset.i;hud();});
-$('modeBtn').onclick=()=>setMode(mode==='bat'?'pitch':'bat');
+$('pitchList').innerHTML='<div id="pHead"></div>'+TYPES.map((t,i)=>`<button class="pt" data-i="${i}"><kbd>${i+1}</kbd><span class="dot" style="background:${t.c}"></span>${t.zh} <small style="opacity:.6">${t.en}</small></button>`).join('')+'<button id="penBtn">牛棚 Bullpen <kbd>B</kbd></button>';
+$('pitchList').querySelectorAll('button.pt').forEach(b=>b.onclick=e=>{const i=+b.dataset.i;if(curPitcher(USER).ars.includes(i)){selType=i;hud();}});
+$('penBtn').onclick=()=>openPen();
+function openPen(){if(mode!=='pitch'||G.over||!G.started)return;penOpen=true;renderPen();$('pen').style.display='block';}
+function closePen(){penOpen=false;$('pen').style.display='none';}
+function renderPen(){const S=TEAMS[USER].staff,cur=curPitcher(USER),canSwap=state==='ready'&&!charging;
+  $('penNote').textContent=canSwap?'點選投手上場 · Tap a pitcher to bring him in':'投球之間才能換投 · Wait until between pitches';
+  $('penList').innerHTML=S.map((x,i)=>{const st=x===cur?`投球中 ${x.pc} 球`:x.used?'已退場':'可上場',ok=canSwap&&!x.used;
+    return `<button class="pr${x===cur?' cur':''}${ok?'':' off'}" data-i="${i}"><em>${ROLE_ZH[x.role]}</em><b>#${x.num} ${x.n}</b>
+      <span>球速 ${x.velo}</span><span>控球 ${x.ctrl}</span><span>體力 ${x.stam}</span><span>球威 ${x.stuff}</span>
+      <span class="ars">${x.ars.map(a=>`<i style="background:${TYPES[a].c}" title="${TYPES[a].zh}"></i>`).join('')}</span><span class="st">${st}</span></button>`;}).join('');
+  $('penList').querySelectorAll('button.pr').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,x=S[i];if(x.used||!(state==='ready'&&!charging))return;changePitcher(USER,i);closePen();});}
+$('penClose').onclick=closePen;
+function setBatterLook(i){const pl=TEAMS[batT()].lineup[i%9];$('bName').textContent=pl.n;$('bNum').textContent='#'+pl.num;batterP.pl=pl;setJersey(batterP,pl.num,pl.n);showIntro();}
+function showIntro(){if(!G.started)return;const pl=curBat(),pr=curPitcher(fieldT()),e=$('intro');
+  e.innerHTML=`<b>第${abIdx%9+1}棒 · ${POS_ZH[pl.pos]} #${pl.num} ${pl.n}</b><span>巧打 ${pl.con} · 力量 ${pl.pow} · 速度 ${pl.spd} · 選球 ${pl.eye}</span><span>今日 ${pl.h}-${pl.ab}${pl.hr?` · ${pl.hr} 轟`:''}${pl.bb?` · ${pl.bb} 保送`:''}</span><i>投手 #${pr.num} ${pr.n}（${ROLE_ZH[pr.role]}）· ${pr.pc} 球</i>`;
+  e.classList.remove('show');void e.offsetWidth;e.classList.add('show');}
 function hud(){const dots=(n,max,c)=>Array.from({length:max},(_,i)=>`<i class="${i<n?'on '+c:''}"></i>`).join('');
   $('cnt').innerHTML=`<b>B</b>${dots(count.b,3,'b')}<b>S</b>${dots(count.s,2,'s')}<b>O</b>${dots(count.o,2,'o')}`;
-  $('pitchList').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('sel',i===selType));
-  $('mRed').style.width=(redSize()*100)+'%';$('runs').textContent='得分 '+runs;$('bases').querySelectorAll('i').forEach((e,i)=>e.classList.toggle('on',!!onBase[i+1]));$('pc').textContent=pitchCount;
-  const st=1-(redSize()-.08)/.54;$('stamFill').style.width=(st*100)+'%';$('stamFill').style.background=st>.5?'#3fd36b':st>.25?'#ffd23a':'#ff4141';
+  const up=curPitcher(USER),f=fatigue(up),st=clamp(1-f,0,1);
+  $('pitchList').querySelectorAll('button.pt').forEach(b=>{const i=+b.dataset.i;b.classList.toggle('sel',i===selType);b.classList.toggle('off',!up.ars.includes(i));});
+  $('pHead').innerHTML=`<b>#${up.num} ${up.n}</b> <em>${ROLE_ZH[up.role]}</em> <span>${up.pc} 球</span><div class="stam"><i style="width:${st*100}%;background:${st>.5?'#3fd36b':st>.2?'#ffd23a':'#ff4141'}"></i></div>`;
+  $('mRed').style.width=(redSize()*100)+'%';$('bases').querySelectorAll('i').forEach((e,i)=>e.classList.toggle('on',!!onBase[i+1]));
+  const aw=1-G.home,hm=G.home,tm=t=>`<span style="color:${TEAMS[t].col}">${TEAMS[t].zh}</span>`;
+  $('runs').innerHTML=`<span class="inn">${G.half?'▼':'▲'}${G.inn}</span> ${tm(aw)} <b>${G.score[aw]}</b> : <b>${G.score[hm]}</b> ${tm(hm)}`;
   reticle.children.forEach(o=>o.material.color.set(TYPES[selType].c));}
 
 // ---------- input ----------
 const cv=renderer.domElement;
 addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;});
-cv.addEventListener('mousedown',e=>{SFX.init();
+cv.addEventListener('mousedown',e=>{SFX.init();if(!G.started||G.over||penOpen)return;
   if(state==='hit'&&play&&!play.ended&&e.button===0){finishPlay();return;}
   if(mode==='bat'){if(e.button===0)onSwing();else if(e.button===2&&state!=='hit'&&state!=='result'&&batterP.state!=='swing')bunting=!bunting;}
   else if(e.button===0&&state==='ready'){charging=true;meter=0;}});
@@ -790,8 +922,7 @@ cv.addEventListener('mousedown',e=>{SFX.init();
   hold('tSwing',()=>{if(state==='hit'&&play&&!play.ended)return finishPlay();onSwing();});
   hold('tBunt',()=>{if(state!=='hit'&&state!=='result'&&batterP.state!=='swing')bunting=!bunting;});
   hold('tPitch',()=>{if(state==='hit'&&play&&!play.ended)return finishPlay();if(state==='ready'){charging=true;meter=0;}},()=>{if(charging)throwPitch(false);});
-  hold('tRest',()=>{pitchCount=0;hud();flash('休息','STAMINA RESTORED');});
-  hold('tMode',()=>setMode(mode==='bat'?'pitch':'bat'));
+  hold('tPen',()=>penOpen?closePen():openPen());
   hold('tMute',()=>{const m=SFX.toggle();$('tMute').textContent=m?'🔇':'🔊';});
   hold('tHelp',()=>document.body.classList.toggle('help'));
   $('tDir').querySelectorAll('button').forEach(b=>hold2(b));
@@ -801,9 +932,10 @@ addEventListener('mouseup',e=>{if(e.button===0&&mode==='pitch'&&charging)throwPi
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;SFX.init();
   if(k==='n'){flash(SFX.toggle()?'靜音':'音效開啟',SFX.muted?'SOUND OFF':'SOUND ON');}
-  if(k==='m')setMode(mode==='bat'?'pitch':'bat');
-  if(k>='1'&&k<='5'&&mode==='pitch'&&!charging){selType=+k-1;hud();}
-  if(k==='r'&&mode==='pitch'){pitchCount=0;hud();flash('休息','STAMINA RESTORED');}});
+  if(!G.started||G.over)return;
+  if(k>='1'&&k<='5'&&mode==='pitch'&&!charging&&curPitcher(USER).ars.includes(+k-1)){selType=+k-1;hud();}
+  if(k==='b')penOpen?closePen():openPen();
+  if(k==='escape'&&penOpen)closePen();});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 
 // ---------- animation ----------
@@ -852,12 +984,12 @@ function animRest(dt){
 }
 
 // ---------- defence & baserunning (fully automatic) ----------
-const BASE_PTS=[V(0,0,0),V(19.4,0,-19.4),V(0,0,-38.8),V(-19.4,0,-19.4),V(0,0,0)],LEG=27.43,RUN_V=7,THROW_V=30,REACT=.35;
+const BASE_PTS=[V(0,0,0),V(19.4,0,-19.4),V(0,0,-38.8),V(-19.4,0,-19.4),V(0,0,0)],LEG=27.43,RUN_V=7,THROW_V=30,REACT=.55;
 const DEF=fielders.map((p,i)=>({p,role:['1B','2B','SS','3B','LF','CF','RF'][i],home:p.g.position.clone(),yaw0:p.g.rotation.y,spd:i>=4?7.8:7.1}))
   .concat([{p:pitcherP,role:'P',home:V(0,0,-18.44),yaw0:0,spd:6.5},{p:catcherP,role:'C',home:V(0,0,1.15),yaw0:Math.PI,spd:6}]);
 const COVER={1:['1B','2B','P'],2:['SS','2B'],3:['3B','SS'],4:['C','P']};
 const RUNNERS=[0,1,2].map(i=>{const r=makePlayer(A(AWAY,{skin:SKINS[(i+1)%4],helmet:1,num:LINEUP[i][1],name:LINEUP[i][0]}));r.g.visible=false;return r;});
-let onBase=[null,null,null,null],runs=0,play=null,walkPending=false;
+let onBase=[null,null,null,null],play=null,walkPending=false;
 const moundY=(x,z)=>{const r=Math.hypot(x,z+18.44);return r<1.1?.25:r<2.9?.25*(2.9-r)/1.8:0;};
 const FIELDP=mk(STAND,{pelv:[0,.62,.05],lHip:[.13,.6,.05],rHip:[-.13,.6,.05],lKn:[.3,.45,.35],rKn:[-.3,.45,.3],lFt:[.35,.05,.05],rFt:[-.35,.05,-.1],neck:[0,1.05,.45],head:[0,1.15,.58],
   lSh:[.18,1,.38],rSh:[-.18,1,.38],lEl:[.2,.6,.55],lHa:[.08,.2,.62],rEl:[-.2,.62,.5],rHa:[-.06,.26,.6]});
@@ -875,17 +1007,24 @@ function runPose(b,dist,v){const c=RUN,cyc=dist/runStride(v),k=Math.max(1,v/RUN_
     if(r>mx){_g1.subVectors(F,H).multiplyScalar(mx/r).add(H).sub(F);F.add(_g1);T.add(_g1);}}
   for(const j of['lHa','rHa','lEl','rEl'])b[j].z=pz+(b[j].z-pz)*Math.sqrt(ks);
   for(const j of['chest','neck','head','lSh','rSh','lEl','rEl','lHa','rHa'])b[j].z+=Math.max(0,b[j].y-py)*lean;}
+// re-dye a dressed player in another team's uniform (body regions were recorded in dressPlayer)
+function wear(p,U){const o=p.o;for(const k of['team','jersey','jerseyHex','numColor','pants','cap','sock','bgl'])o[k]=U[k];
+  const C=h=>new THREE.Color(h).convertSRGBToLinear(),cols=[C(0x151515),C(o.bgl||o.skin),C(o.skin),C(o.jersey),C(o.sock),C(o.pants)],a=p.colAttr;
+  if(a){for(let i=0;i<p.reg.length;i++){const c=cols[p.reg[i]];a.setXYZ(i,c.r,c.g,c.b);}a.needsUpdate=true;}
+  if(p.mC)p.mC.color.copy(C(o.cap));
+  if(p.teamPlane){p.teamPlane.material.map.dispose();p.teamPlane.material.map=chestTex(o.team,o.numColor);}
+  setJersey(p,o.num,o.name);}
 function setJersey(p,num,name){p.o.num=num;p.o.name=name;if(p.numPlane){p.numPlane.material.map.dispose();p.numPlane.material.map=numTex(num,name,p.o.jerseyHex,p.o.numColor);}}
-function takeRunner(i){const r=RUNNERS.find(x=>!onBase.includes(x));const [n,num]=LINEUP[i%LINEUP.length];setJersey(r,num,n);return r;}
+function takeRunner(i){const r=RUNNERS.find(x=>!onBase.includes(x)),pl=TEAMS[batT()].lineup[i%9];setJersey(r,pl.num,pl.n);r.pl=pl;return r;}
 function placeRunners(){for(const r of RUNNERS){const b=onBase.indexOf(r);r.g.visible=b>0;if(b<=0)continue;
   const nx=BASE_PTS[b+1],lead=V().subVectors(nx,BASE_PTS[b]).setLength(1.6);r.g.position.copy(BASE_PTS[b]).add(lead);
   r.g.rotation.y=Math.atan2(-r.g.position.x,-18.44-r.g.position.z);r.mk='';setPose(r,READY);}hud();}
 function clearBases(){onBase=[null,null,null,null];placeRunners();}
-function walkAdvance(){if(onBase[1]){if(onBase[2]){if(onBase[3])runs++;onBase[3]=onBase[2];}onBase[2]=onBase[1];}onBase[1]=takeRunner(abIdx);placeRunners();}
+function walkAdvance(){if(onBase[1]){if(onBase[2]){if(onBase[3])addRun();onBase[3]=onBase[2];}onBase[2]=onBase[1];}onBase[1]=takeRunner(abIdx);placeRunners();}
 const runArr=(r,b)=>r.start+(b-r.base)*LEG/r.spd+Math.max(0,b-r.base-1)*.25;
 function startPlay(v0,la,bunt){const sim=simBall(ball.position,v0,la),P={t0:now,sim,ev:[],runners:[],outs:0,ended:false};
-  for(let b=3;b>=1;b--)if(onBase[b])P.runners.push({p:onBase[b],base:b,target:b,start:.25,spd:RUN_V});
-  const bat={p:batterP,base:0,target:1,start:.55,spd:RUN_V,isBatter:true};P.runners.push(bat);
+  for(let b=3;b>=1;b--)if(onBase[b])P.runners.push({p:onBase[b],base:b,target:b,start:.25,spd:runSpd(onBase[b].pl)});
+  const bat={p:batterP,base:0,target:1,start:.55,spd:runSpd(curBat()),isBatter:true};P.runners.push(bat);
   P.ev.push({t:sim.landT,fn:()=>{const d=Math.hypot(sim.landP.x,sim.landP.z);landMark.position.set(sim.landP.x,groundH(sim.landP.x,sim.landP.z)+.04,sim.landP.z);landMark.visible=true;
     $('hbDist').textContent=`${d.toFixed(1)} m · ${Math.round(d*3.281)} ft`;if(sim.foul){flash('界外球','FOUL BALL');$('hbRes').textContent='界外球 FOUL';}}});
   if(sim.hr){P.ev.push({t:sim.hrT,fn:()=>{flash('全壘打！','HOME RUN');$('hbRes').textContent='全壘打 HOME RUN';}});
@@ -899,37 +1038,51 @@ function planDefense(P){const S=P.sim.S;let best=null;
     if(REACT+Math.hypot(s.p.x-d.home.x,s.p.z-d.home.z)/d.spd<=s.t){if(!best||s.t<best.s.t)best={d,s};break;}}
   if(!best){const e=S[S.length-1];for(const d of DEF){const t=Math.max(e.t,REACT+Math.hypot(e.p.x-d.home.x,e.p.z-d.home.z)/d.spd);if(!best||t<best.s.t)best={d,s:{t,p:e.p,air:false}};}}
   P.F=best.d;P.tf=best.s.t;P.pF=best.s.p.clone();P.kind=best.s.air?'catch':'field';
-  P.relT=P.tf+(P.kind==='catch'?.7:.6);const arr=b=>P.relT+Math.hypot(P.pF.x-BASE_PTS[b].x,P.pF.z-BASE_PTS[b].z)/THROW_V;
+  const rel0=P.tf+(P.kind==='catch'?.7:.6),far=(a,b)=>Math.hypot(a.x-BASE_PTS[b].x,a.z-BASE_PTS[b].z);
+  // who takes a throw at base b: first covering role that isn't already busy with this play
+  const recvFor=(b,ex)=>{for(const role of COVER[b]){const d=DEF.find(x=>x.role===role);if(d&&!ex.includes(d))return d;}return null;};
+  const mkThrow=(by,from,b,relT,ex)=>({by,to:b,relT,arrT:relT+far(from,b)/THROW_V,recv:recvFor(b,ex),arc:far(from,b)*.03});
+  const arr=b=>rel0+far(P.pF,b)/THROW_V;
   const bat=P.runners[P.runners.length-1],occ=b=>P.runners.some(r=>r.base===b),forced=r=>r.isBatter||[1,2,3].filter(k=>k<r.base).every(occ);
-  if(P.kind==='catch'){P.outs=1;bat.out=true;bat.outT=P.tf;P.runners.forEach(r=>{if(!r.isBatter)r.start=1e9;});P.throwTo=2;P.result=['接殺出局','FLY OUT'];
-    P.ev.push({t:P.tf,fn:()=>flash('接殺出局','FLY OUT')});}
-  else{let outR=null,outB=0,bm=.05;
-    if(Math.hypot(P.pF.x,P.pF.z)<42)for(const r of P.runners){if(!forced(r))continue;const b=r.base+1,m=runArr(r,b)-arr(b);if(m>bm){bm=m;outR=r;outB=b;}}
-    let cap=4;
+  if(P.kind==='catch'){P.outs=1;bat.out=true;bat.outT=P.tf;P.runners.forEach(r=>{if(!r.isBatter)r.start=1e9;});P.result=['接殺出局','FLY OUT'];
+    P.throws=[mkThrow(P.F,P.pF,2,rel0,[P.F])];P.ev.push({t:P.tf,fn:()=>flash('接殺出局','FLY OUT')});}
+  else{let plan=null;
+    // every force out we can make; with fewer than two outs, see whether the pivot man can turn two at first
+    if(Math.hypot(P.pF.x,P.pF.z)<42)for(const r of P.runners){if(!forced(r))continue;
+      const b=r.base+1,t1=mkThrow(P.F,P.pF,b,rel0,[P.F]),m=runArr(r,b)-t1.arrT;if(m<=.05)continue;
+      const c={r,b,t1,outs:1,m};
+      if(!r.isBatter&&count.o<2&&t1.recv){const t2=mkThrow(t1.recv,BASE_PTS[b],1,t1.arrT+.62,[P.F,t1.recv]);if(t2.recv&&runArr(bat,1)-t2.arrT>.15){c.t2=t2;c.outs=2;}}
+      c.score=c.outs*10+(r.isBatter?0:1)+m;   // two outs first, then the lead runner, then the surest
+      if(!plan||c.score>plan.score)plan=c;}
+    const outR=plan&&plan.r,outB=plan&&plan.b;let cap=4;
     for(const r of P.runners){
-      if(r===outR){r.target=outB;r.out=true;r.outT=arr(outB);cap=outB===4?4:outB-1;continue;}
+      if(r===outR){r.target=outB;r.out=true;r.outT=plan.t1.arrT;cap=outB===4?4:outB-1;continue;}
       const minB=forced(r)?r.base+1:r.base;let t=minB;
       for(let b=minB+1;b<=Math.min(4,cap);b++){if(runArr(r,b)+.6<arr(b))t=b;else break;}
       r.target=Math.max(minB,Math.min(t,cap));cap=r.target===4?4:r.target-1;}
-    const mover=P.runners.find(r=>r.target>r.base&&!r.out);P.throwTo=outR?outB:Math.min(4,mover?mover.target:1);
-    if(outR){P.outs=1;P.result=outR.isBatter?['刺殺出局','GROUND OUT']:['封殺出局','FORCE OUT'];P.ev.push({t:arr(outB),fn:()=>flash('出局','OUT')});}
-    else{P.result=[['一壘安打','SINGLE'],['二壘安打','DOUBLE'],['三壘安打','TRIPLE'],['場內全壘打','INSIDE-THE-PARK HR']][bat.target-1];
+    if(plan){P.outs=plan.outs;P.throws=[plan.t1];
+      if(plan.t2){P.throws.push(plan.t2);bat.target=1;bat.out=true;bat.outT=plan.t2.arrT;}
+      P.result=plan.t2?['雙殺','DOUBLE PLAY']:outR.isBatter?['刺殺出局','GROUND OUT']:['封殺出局','FORCE OUT'];
+      P.ev.push({t:plan.t1.arrT,fn:()=>flash('出局','OUT')});
+      if(plan.t2)P.ev.push({t:plan.t2.arrT,fn:()=>flash('雙殺！','DOUBLE PLAY')});}
+    else{const mover=P.runners.find(r=>r.target>r.base&&!r.out);P.throws=[mkThrow(P.F,P.pF,Math.min(4,mover?mover.target:1),rel0,[P.F])];
+      P.result=[['一壘安打','SINGLE'],['二壘安打','DOUBLE'],['三壘安打','TRIPLE'],['場內全壘打','INSIDE-THE-PARK HR']][bat.target-1];
       P.ev.push({t:runArr(bat,bat.target),fn:()=>flash(P.result[0],P.result[1])});}}
-  P.arrT=arr(P.throwTo);P.arc=Math.hypot(P.pF.x-BASE_PTS[P.throwTo].x,P.pF.z-BASE_PTS[P.throwTo].z)*.03;
-  const roles=COVER[P.throwTo];P.recv=DEF.find(d=>roles.includes(d.role)&&d!==P.F&&d.role===roles.find(x=>x!==P.F.role));
-  P.end=Math.max(P.arrT,...P.runners.map(r=>r.out?r.outT:r.target>r.base?runArr(r,r.target):0))+2.6;}
+  const last=P.throws[P.throws.length-1];
+  P.end=Math.max(last.arrT,...P.runners.map(r=>r.out?r.outT:r.target>r.base?runArr(r,r.target):0))+2.6;}
 const _g1=V(),_g2=V();
 function gloveW(p,o){return p.g.localToWorld(o.copy(p.gripL||p.buf.lHa));}
 function updatePlay(dt){const P=play,pt=now-P.t0;
   for(const e of P.ev)if(!e.done&&pt>=e.t){e.done=true;e.fn();}
   for(const e of P.sim.snd)if(!e.done&&pt>=e.t){e.done=true;if(!(P.F&&pt>=P.tf))e.k==='wall'?SFX.wall():SFX.bounce(e.v);}
   if(P.F&&!P.sF&&pt>=P.tf){P.sF=1;SFX.glove(.6);}
-  if(P.F&&!P.sT&&pt>=P.arrT&&P.arrT>P.relT){P.sT=1;SFX.glove(.7);}
-  if(P.F&&pt>=P.tf){
-    if(pt<P.relT){if(pt<P.tf+.35)gloveW(P.F.p,ball.position);else P.F.p.g.localToWorld(ball.position.copy(P.F.p.gripR||P.F.p.buf.rHa));}
-    else{if(!P.relPt)P.relPt=ball.position.clone();const u=clamp((pt-P.relT)/(P.arrT-P.relT));
-      if(P.recv)gloveW(P.recv.p,_g1);else _g1.copy(BASE_PTS[P.throwTo]).setY(1.3);
-      ball.position.lerpVectors(P.relPt,_g1,u);ball.position.y+=4*P.arc*u*(1-u);}
+  const TH=P.throws||[];for(const t of TH)if(!t.snd&&pt>=t.arrT){t.snd=1;SFX.glove(.7);}
+  if(P.F&&pt>=P.tf&&TH.length){let k=TH.findIndex(t=>pt<t.arrT);if(k<0)k=TH.length-1;const th=TH[k],h=th.by.p;
+    if(pt<th.relT){const caught=k===0?P.tf:TH[k-1].arrT;   // in the glove just after the catch, then in the throwing hand
+      if(pt<caught+(k===0?.35:.15))gloveW(h,ball.position);else h.g.localToWorld(ball.position.copy(h.gripR||h.buf.rHa));}
+    else{if(!th.relPt)th.relPt=ball.position.clone();const u=clamp((pt-th.relT)/(th.arrT-th.relT));
+      if(th.recv)gloveW(th.recv.p,_g1);else _g1.copy(BASE_PTS[th.to]).setY(1.3);
+      ball.position.lerpVectors(th.relPt,_g1,u);ball.position.y+=4*th.arc*u*(1-u);}
     blob.visible=false;}
   else{samplePath(P.sim.S,pt,ball.position);blob.position.set(ball.position.x,groundH(ball.position.x,ball.position.z)+.03,ball.position.z);blob.visible=true;
     if(pt<P.sim.landT)$('hbDist').textContent=`${Math.hypot(ball.position.x,ball.position.z).toFixed(1)} m`;
@@ -940,21 +1093,26 @@ const pathLen=path=>{let L=0;for(let i=0;i<path.length-1;i++)L+=path[i].distance
 function turnTo(p,yaw,dt){let d=yaw-p.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));p.g.rotation.y+=d*Math.min(1,dt*10);}
 function animPlay(dt){const P=play,pt=now-P.t0;
   // fielders
-  for(const d of DEF){const p=d.p,b=p.buf;if(d.role==='P'&&P.F!==d&&P.recv!==d&&pt<1)continue;
-    let tgt=d.home;if(P.F===d)tgt=P.pF;else if(P.recv===d)tgt=BASE_PTS[P.throwTo];else if(P.F)tgt=_g2.copy(d.home).lerp(V(P.pF.x,0,P.pF.z),.15);
-    const to=V(tgt.x-d.pos.x,0,tgt.z-d.pos.z),dist=to.length(),busy=P.F===d&&pt>=P.tf;let step=0;
-    if(pt>REACT&&!P.foul&&!P.sim.hr&&dist>.05&&!busy){step=Math.min(dist,d.spd*dt*(P.F===d||P.recv===d?1:.45));d.pos.addScaledVector(to.normalize(),step);}
+  const TH=P.throws||[];
+  for(const d of DEF){const p=d.p,b=p.buf,myT=TH.find(t=>t.by===d),rcT=TH.find(t=>t.recv===d);   // the throw I make / the throw I take
+    if(d.role==='P'&&P.F!==d&&!rcT&&pt<1)continue;
+    let tgt=d.home;if(P.F===d)tgt=P.pF;else if(rcT)tgt=BASE_PTS[rcT.to];else if(P.F)tgt=_g2.copy(d.home).lerp(V(P.pF.x,0,P.pF.z),.15);
+    const to=V(tgt.x-d.pos.x,0,tgt.z-d.pos.z),dist=to.length(),busy=P.F===d?pt>=P.tf:!!(myT&&rcT&&pt>=rcT.arrT-.15);let step=0;
+    if(pt>REACT&&!P.foul&&!P.sim.hr&&dist>.05&&!busy){step=Math.min(dist,d.spd*dt*(P.F===d||rcT?1:.45));d.pos.addScaledVector(to.normalize(),step);}
     p.g.position.set(d.pos.x,d.role==='P'?moundY(d.pos.x,d.pos.z):0,d.pos.z);
     let face=Math.atan2(ball.position.x-d.pos.x,ball.position.z-d.pos.z),key='ready';
-    if(busy){if(pt<P.relT-.45)key=P.kind==='catch'?'catch':'field';else if(pt<P.relT+.7){key='throw';face=Math.atan2(BASE_PTS[P.throwTo].x-d.pos.x,BASE_PTS[P.throwTo].z-d.pos.z);}}
+    if(busy&&myT){const wind=myT.relT-(P.F===d?.45:.3);   // a pivot man turns it quicker than a fielder setting his feet
+      if(pt<wind)key=P.F===d?(P.kind==='catch'?'catch':'field'):'recv';
+      else if(pt<myT.relT+.7){key='throw';face=Math.atan2(BASE_PTS[myT.to].x-d.pos.x,BASE_PTS[myT.to].z-d.pos.z);}}
+    else if(busy&&P.F===d)key=P.kind==='catch'?'catch':'field';
     else if(step>d.spd*dt*.3){key='run';face=Math.atan2(to.x,to.z);d.ph+=step;}
-    else if(P.recv===d&&pt>P.relT-.4)key='recv';
+    else if(rcT&&pt>rcT.relT-.4)key='recv';
     poseKey(p,key,key==='throw'?.12:.2);
-    if(key==='throw'){sampleClip(PC,RELEASE+(pt-P.relT),b);for(const k in b)if(b[k].isVector3&&k!=='bat'){b[k].x-=THROW_OFF.x;b[k].z-=THROW_OFF.z;}}
+    if(key==='throw'){sampleClip(PC,RELEASE+(pt-myT.relT),b);for(const k in b)if(b[k].isVector3&&k!=='bat'){b[k].x-=THROW_OFF.x;b[k].z-=THROW_OFF.z;}}
     else if(key==='run')runPose(b,d.ph,d.spd);
     else{const PZ=key==='catch'?CATCHF:key==='field'?FIELDP:key==='recv'?RECV:READY;lerpPose(PZ,PZ,0,b);b._m=0;fillAux(b);}
     blendIn(p);turnTo(p,face,dt);p.g.updateMatrixWorld();p.look=p.look||V();p.look.copy(ball.position);p.g.worldToLocal(p.look);
-    p.holdBall=P.F===d&&pt>=P.tf+.3&&pt<P.relT;setPose(p,b);}
+    p.holdBall=!!(busy&&myT&&pt<myT.relT&&(P.F!==d||pt>=P.tf+.3));setPose(p,b);}
   // runners
   for(const r of P.runners){const p=r.p,b=p.buf;if(r.hidden||(r.isBatter&&pt<r.start))continue;
     if(r.isBatter&&p.state!=='run'){p.state='run';if(p.bat)p.bat.visible=false;r.path[0].copy(p.g.position).setY(0);}
@@ -962,11 +1120,13 @@ function animPlay(dt){const P=play,pt=now-P.t0;
     along(r.path,dd,p.g.position);const moving=pt<tEnd&&pt>r.start;
     if(moving){const ahead=along(r.path,Math.min(L,dd+.5),_g1);turnTo(p,Math.atan2(ahead.x-p.g.position.x,ahead.z-p.g.position.z),dt);}
     poseKey(p,moving?'run':'stand',.2);if(moving)runPose(b,dd,r.spd);else{lerpPose(READY,READY,0,b);b._m=0;fillAux(b);}blendIn(p);setPose(p,b);
-    if(r.target===4&&!r.out&&pt>=tEnd&&!r.scored){r.scored=true;runs++;hud();SFX.cheer(.7,2);}
+    if(r.target===4&&!r.out&&pt>=tEnd&&!r.scored){r.scored=true;addRun(P);SFX.cheer(.7,2);}
     if((r.out||r.scored)&&pt>tEnd+1.2){p.g.visible=false;r.hidden=true;}}}
 function finishPlay(silent){const P=play;if(!P||P.ended)return;P.ended=true;
   if(!P.foul){count.o+=P.outs;const nb=[null,null,null,null];let bb=0;
-    for(const r of P.runners){if(r.out)continue;if(r.target>=4){if(!r.scored)runs++;if(!r.isBatter)r.p.g.visible=false;continue;}if(r.isBatter)bb=r.target;else nb[r.target]=r.p;}
+    for(const r of P.runners){if(r.out)continue;if(r.target>=4){if(!r.scored)addRun(P);if(!r.isBatter)r.p.g.visible=false;continue;}if(r.isBatter)bb=r.target;else nb[r.target]=r.p;}
+    if(P.kind==='field'&&count.o>=3&&P.runs){const t=batT();G.score[t]-=P.runs;G.line[t][G.inn-1]-=P.runs;drawBoard();hud();}
+    const B=P.runners.find(r=>r.isBatter);recordPA(P.sim.hr?'HR':B&&!B.out&&P.result&&/SINGLE|DOUBLE|TRIPLE|HR/.test(P.result[1])?'H':'OUT');
     onBase=nb;if(bb)onBase[bb]=takeRunner(abIdx);
     if(P.result)$('hbRes').textContent=P.result.join(' ');}
   DEF.forEach(d=>{d.p.g.position.copy(d.home);if(d.role==='P')d.p.g.position.y=.25;d.p.g.rotation.y=d.yaw0;d.p.mk='';});
@@ -1009,7 +1169,7 @@ function update(dt){now+=dt;
   if(bunting){const bd=(keys.d?1:0)-(keys.a?1:0);if(TOUCH)$('tDir').querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.d==='a'&&bd<0)||(b.dataset.d==='d'&&bd>0)||(b.dataset.d===''&&bd===0)));$('bL').classList.toggle('on',bd<0);$('bC').classList.toggle('on',bd===0);$('bR').classList.toggle('on',bd>0);}
   if(mode==='pitch'){if(charging){meter+=dt/1.1;if(meter>=1-redSize()){meter=1-redSize();throwPitch(true);}}
     $('mFill').style.width=(meter*100)+'%';$('mTxt').textContent=charging?Math.round(clamp(meter/(1-redSize()))*100)+'%':'';}
-  if(mode==='bat'&&state==='ready'&&now>=readyAt)cpuThrow();
+  if(mode==='bat'&&state==='ready'&&now>=readyAt&&G.started&&!G.over)cpuThrow();
   if(state==='windup'&&now>=pitch.tRel){state='flight';showPitch(pitch);
     // the ball leaves from the pitcher's actual fingers
     if(pitcherP.ballPt){pitch.P0.copy(pitcherP.ballPt);pitcherP.g.localToWorld(pitch.P0);pitch.dur=Math.max(.5,(pitch.P0.distanceTo(pitch.T)+(mode==='pitch'?PITCH_OFF:0))/pitch.sp*1.3);pitch.tArr=pitch.tRel+pitch.dur;}
@@ -1035,7 +1195,17 @@ function update(dt){now+=dt;
   if(aimReset&&TOUCH){camera.updateMatrixWorld();const v=V(0,.75,0).project(camera);mouse.set(v.x,v.y);}aimReset=false;  // touch aims relatively: start on the zone
 }
 function loop(){const dt=Math.min(clock.getDelta(),.05);update(dt);renderer.render(scene,camera);requestAnimationFrame(loop);}
-setBatterLook(0);setMode('bat');loop();
+// ---------- coin toss, then play ball ----------
+beginHalf();
+document.querySelectorAll('#coinBtns button').forEach(b=>b.onclick=()=>{SFX.init();const call=+b.dataset.c,r=Math.random()<.5?0:1,win=call===r;
+  $('coinBtns').style.display='none';$('coinMsg').textContent='……';
+  $('coin').style.transform=`rotateY(${1800+(r?180:0)}deg)`;
+  setTimeout(()=>{G.home=win?1-USER:USER;   // the toss winner bats first (visitors)
+    $('coinMsg').innerHTML=`${r?'反面':'正面'}！${win?'你猜對了':'猜錯了'} — <b>${TEAMS[1-G.home].zh}隊先攻</b> · ${win?'You bat first':'You pitch first'}`;
+    $('playBall').style.display='inline-block';beginHalf();},1800);});
+$('playBall').onclick=()=>{SFX.init();$('start').style.display='none';G.started=true;
+  for(const T of TEAMS)T.staff[0].used=true;beginHalf();SFX.say('Play ball');};
+loop();
 </script>
 </body>
 </html>
