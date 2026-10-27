@@ -345,6 +345,13 @@ function dressPlayer(p){const o=p.o,m=THREE.SkeletonUtils.clone(RIG.root);m.quat
     if(!RIG_ORDER.includes(bn.parent.name))R.pQ[n]=Gq(bn.parent);}
   R.invParent=Gm(bones.spine.parent).invert();
   R.uaM=Gp(bones['upper_armL']).distanceTo(Gp(bones['forearmL']));R.faM=Gp(bones['forearmL']).distanceTo(Gp(bones['handL']));
+  R.fq={};R.hand={};
+  for(const sd of['L','R']){const qh=Gq(bones['hand'+sd]).invert(),mb=bones['f_middle01'+sd],tip=bones['f_middle03'+sd],a=Gp(tip),q0=mb.quaternion.clone();
+    mb.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(XAX,.6));mb.updateMatrixWorld(true);const b=Gp(tip);mb.quaternion.copy(q0);mb.updateMatrixWorld(true);
+    const pn=b.sub(a).applyQuaternion(qh);pn.y=0;pn.normalize();   // hand-local, Y runs along the hand: direction the fingers close = palm side
+    const ix=Gp(bones['f_index01'+sd]).sub(Gp(bones['f_pinky01'+sd])).applyQuaternion(qh);ix.y=0;ix.normalize();
+    R.hand[sd]={pn,ix};R.rR['hand'+sd]=ix.clone().applyQuaternion(R.Qr['hand'+sd]);
+    for(const f of FINGERS)for(const k of['01','02','03'])R.fq[f+k+sd]=bones[f+k+sd].quaternion.clone();}
   R.hipOff=Gp(bones['thighL']).add(Gp(bones['thighR'])).multiplyScalar(.5).sub(Gp(bones.spine));
   // colour the body by region: uniform, belt, socks, cleats, skin, batting gloves
   const P=mesh.geometry.attributes.position,JI=mesh.geometry.attributes.skinIndex,WI=mesh.geometry.attributes.skinWeight,mw=Gm(mesh),sl=mesh.skeleton.bones;
@@ -376,6 +383,10 @@ function dressPlayer(p){const o=p.o,m=THREE.SkeletonUtils.clone(RIG.root);m.quat
   p.g.rotation.y=yaw;p.g.position.copy(pos0);p.g.updateMatrixWorld(true);p.rig=R;
   setPose(p,p.cur);}
 const GRIP=.075; // wrist -> palm centre along the hand
+const XAX=V(1,0,0),FINGERS=['f_index','f_middle','f_ring','f_pinky','thumb'],_qx=new THREE.Quaternion();
+// finger flex per joint (01,02,03) for the four fingers, then the thumb
+const CURL={bat:[[1.25,1.35,.85],[.35,.75,.6]],ball:[[.55,.75,.5],[.3,.55,.45]],relax:[[.25,.35,.25],[.1,.2,.15]]};
+function curl(R,sd,c){for(const f of FINGERS){const a=f==='thumb'?c[1]:c[0];['01','02','03'].forEach((k,i)=>{const n=f+k+sd;R.bones[n].quaternion.copy(R.fq[n]).multiply(_qx.setFromAxisAngle(XAX,a[i]));});}}
 const _q1=new THREE.Quaternion(),_q2=new THREE.Quaternion(),_m1=new THREE.Matrix4(),_m2=new THREE.Matrix4(),_v1=V(),_v2=V(),_hp=V(),_gp=V();
 function deltaQ(d0,r0,d1,r1,out){_v1.crossVectors(d0,r0);_m1.makeBasis(d0,r0,_v1);_v2.crossVectors(d1,r1);_m2.makeBasis(d1,r1,_v2);return out.setFromRotationMatrix(_m2.multiply(_m1.transpose()));}
 const perp=(v,d)=>{const r=v.clone().addScaledVector(d,-v.dot(d));return r.lengthSq()<1e-6?null:r.normalize();};
@@ -386,7 +397,7 @@ function rigPose(p,j){const R=p.rig,B=R.bones,dir=(a,b)=>V().subVectors(b,a).nor
   for(const [s,l] of[['L','l'],['R','r']]){const Sh=j[l+'Sh'],El=j[l+'El'],Ha=j[l+'Ha'],Hi=j[l+'Hip'],Kn=j[l+'Kn'],Ft=j[l+'Ft'],To=j[l+'Toe'];
     const eb=V().subVectors(El,Sh).add(V().subVectors(El,Ha)),kf=V().subVectors(Kn,Hi).add(V().subVectors(Kn,Ft));
     if(eb.lengthSq()<1e-5)eb.copy(shF).negate();if(kf.lengthSq()<1e-5)kf.copy(hipF);
-    T['shoulder'+s]=[dir(base,Sh),shF];T['upper_arm'+s]=[dir(Sh,El),eb];T['forearm'+s]=[dir(El,Ha),eb];T['hand'+s]=[dir(El,Ha),eb];
+    T['shoulder'+s]=[dir(base,Sh),shF];T['upper_arm'+s]=[dir(Sh,El),eb];T['forearm'+s]=[dir(El,Ha),eb];T['hand'+s]=[dir(El,Ha),eb.clone().negate()];
     T['thigh'+s]=[dir(Hi,Kn),kf];T['shin'+s]=[dir(Kn,Ft),kf];T['foot'+s]=[dir(Ft,To),UP];}
   const setBones=names=>{for(const n of names){const [d,r0]=T[n];let r=perp(r0,d);if(!r)r=R.last[n]||perp(R.rR[n],d)||R.rR[n];else(R.last[n]||(R.last[n]=V())).copy(r);
     deltaQ(R.dR[n],R.rR[n],d,r,_q1);const Q=R.cur[n]||(R.cur[n]=new THREE.Quaternion());Q.multiplyQuaternions(_q1,R.Qr[n]);
@@ -401,10 +412,14 @@ function rigPose(p,j){const R=p.rig,B=R.bones,dir=(a,b)=>V().subVectors(b,a).nor
   if(p.bat)tgt.R.copy(j.lHa).addScaledVector(dir(j.lEl,j.lHa),GRIP).addScaledVector(bd,.1).addScaledVector(dir(j.rEl,j.rHa),-GRIP);
   for(const [s,l] of[['L','l'],['R','r']]){const S=gpos('upper_arm'+s),H=tgt[s],E=j[l+'El'].clone();ik(S,H,E,R.uaM,R.faM,E);
     const eb=V().subVectors(E,S).add(V().subVectors(E,H));if(eb.lengthSq()<1e-5)eb.copy(shF).negate();
-    T['upper_arm'+s]=[dir(S,E),eb];T['forearm'+s]=[dir(E,H),eb];T['hand'+s]=[dir(E,H),eb];
+    T['upper_arm'+s]=[dir(S,E),eb];T['forearm'+s]=[dir(E,H),eb];T['hand'+s]=[dir(E,H),p.bat?bd:eb.clone().negate()];
     p['grip'+s]=(p['grip'+s]||V()).copy(H).addScaledVector(dir(E,H),GRIP);}
-  setBones(['upper_armL','forearmL','handL','upper_armR','forearmR','handR']);p.g.updateMatrixWorld(true);
-  for(const s of['L','R']){const W=gpos('hand'+s),E=gpos('forearm'+s);p['grip'+s].copy(W).addScaledVector(W.clone().sub(E).normalize(),GRIP);}
+  setBones(['upper_armL','forearmL','handL','upper_armR','forearmR','handR']);
+  for(const sd of['L','R'])curl(R,sd,CURL[p.bat?'bat':sd==='R'&&p.holdBall?'ball':'relax']);
+  p.g.updateMatrixWorld(true);
+  for(const s of['L','R']){const W=gpos('hand'+s),hq=R.cur['hand'+s],hd=V(0,1,0).applyQuaternion(hq),pn=R.hand[s].pn.clone().applyQuaternion(hq);
+    p['grip'+s].copy(W).addScaledVector(hd,GRIP).addScaledVector(pn,.028);
+    if(s==='R')(p.ballPt||(p.ballPt=V())).copy(gpos('f_index03R')).add(gpos('f_middle03R')).add(gpos('thumb03R')).multiplyScalar(1/3).addScaledVector(pn,.032).addScaledVector(hd,.012);}  // cradled against the fingertips and thumb
   if(p.bat){const hh=V().subVectors(p.gripR,p.gripL);if(hh.length()>.1&&hh.dot(bd)>0)bd.copy(hh.normalize()); // bat runs through both palms
     p.bat.quaternion.setFromUnitVectors(UP,bd);p.bat.position.copy(p.gripL).addScaledVector(bd,-.06);}
   if(p.o.glove){p.hL.position.copy(p.gripL);p.hL.quaternion.setFromUnitVectors(UP,dir(gpos('forearmL'),gpos('handL')));}
@@ -698,7 +713,7 @@ function animPlayers(dt){
   else{sampleClip(PC,0,qb);const br=Math.sin(now*1.6)*.006;qb.neck.y+=br;qb.head.y+=br;qb.chest.y+=br*.6;}
   blendIn(q);
   q.look=q.look||V();if(state==='hit'){q.g.updateMatrixWorld();q.look.copy(ball.position);q.g.worldToLocal(q.look);}else q.look.set(0,1.1,18.4);
-  setPose(q,qb);
+  q.holdBall=state==='ready'||state==='windup';setPose(q,qb);
   if(catcherP.g.visible){const c=catcherP.buf;lerpPose(CATCH,CATCH,0,c);
     if(pitch&&state!=='ready'){const k=clamp((now-pitch.tRel)/pitch.dur);c.lHa.lerp(V(-pitch.T.x,clamp(pitch.T.y,.3,1.5),.62),smooth(k));c.lEl.lerpVectors(c.lSh,c.lHa,.5).add(V(.12,-.12,0));}
     setPose(catcherP,c);setPose(umpP,UMP);}
@@ -736,7 +751,7 @@ function update(dt){now+=dt;
   if(mode==='bat'&&state==='ready'&&now>=readyAt)cpuThrow();
   if(state==='windup'&&now>=pitch.tRel){state='flight';showPitch(pitch);
     // the ball leaves from the pitcher's actual fingers
-    if(pitcherP.gripR){pitch.P0.copy(pitcherP.gripR);pitcherP.g.localToWorld(pitch.P0);pitch.dur=Math.max(.5,pitch.P0.distanceTo(pitch.T)/pitch.sp*1.3);pitch.tArr=pitch.tRel+pitch.dur;}
+    if(pitcherP.ballPt){pitch.P0.copy(pitcherP.ballPt);pitcherP.g.localToWorld(pitch.P0);pitch.dur=Math.max(.5,pitch.P0.distanceTo(pitch.T)/pitch.sp*1.3);pitch.tArr=pitch.tRel+pitch.dur;}
     if(mode==='pitch'){cpuPlan=planCPU(pitch);if(cpuPlan.swing)pending={cpu:true,plan:cpuPlan,tcon:pitch.tArr-cpuPlan.tn*.075};}}
   if(pitch&&(state==='flight'||(state==='result'&&!pitch.hitBall))){const u=(now-pitch.tRel)/pitch.dur;
     pitchPos(pitch,u,ball.position);
@@ -748,13 +763,13 @@ function update(dt){now+=dt;
       else if(!pitch.resolved&&bunting&&u>=1)resolveBunt();
       else if(!pitch.resolved&&!pending&&now>=pitch.tArr+.1)callPitch();
       if(isHBP(pitch.T)&&u>.55&&batterP.state==='stance'&&!bunting){batterP.state='flinch';batterP.t0=now;}}}
-  else if(state==='ready'||state==='windup'){pitcherP.g.updateMatrixWorld();ball.position.copy(pitcherP.gripR||pitcherP.buf.rHa);pitcherP.g.localToWorld(ball.position);ball.visible=true;}
+  else if(state==='ready'||state==='windup'){pitcherP.g.updateMatrixWorld();ball.position.copy(pitcherP.ballPt||pitcherP.buf.rHa);pitcherP.g.localToWorld(ball.position);ball.visible=true;}
   if(state==='hit'){pitch.hitBall=true;ball.visible=true;stepBall(dt);if(hb.landed&&now-hb.landT>=3){
     if(hb.foul){if(count.s<2)count.s++;readyPitch();}else newAB();}}
   if(state==='result'&&now>=resultUntil)next();
-  ball.scale.setScalar(state==='hit'?2.2:1.5);ball.rotation.x+=dt*(state==='hit'?-28:(state==='flight'?36:0));ball.rotation.z+=dt*(state==='flight'&&pitch?pitch.B.x*30:0);
+  ball.scale.setScalar(state==='hit'?2.2:state==='ready'||state==='windup'?1:1.5);ball.rotation.x+=dt*(state==='hit'?-28:(state==='flight'?36:0));ball.rotation.z+=dt*(state==='flight'&&pitch?pitch.B.x*30:0);
   animPlayers(dt);
-  if((state==='ready'||state==='windup')&&pitcherP.gripR){ball.position.copy(pitcherP.gripR);pitcherP.g.localToWorld(ball.position);} // ball sits in this frame's palm
+  if((state==='ready'||state==='windup')&&pitcherP.ballPt){ball.position.copy(pitcherP.ballPt);pitcherP.g.localToWorld(ball.position);} // ball sits in this frame's palm
   updateCamera(dt);
 }
 function loop(){const dt=Math.min(clock.getDelta(),.05);update(dt);renderer.render(scene,camera);requestAnimationFrame(loop);}
