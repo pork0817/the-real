@@ -482,7 +482,7 @@ const BATTER_HOME=batterP.g.position.clone();
 const pitcherP=makePlayer(A(HOME,{skin:SKINS[1],num:18,name:'陳柏翰',glove:1}));pitcherP.g.position.set(0,.25,-18.44);
 // Pitching view uses a visual offset (like broadcast-style baseball games): the pitcher is drawn PITCH_OFF m nearer the plate,
 // which the telephoto camera behind him hides. Pitch timing still uses the full 18.44 m.
-const PITCH_OFF=8,PITCH_X=.85; // nearer the plate, and a little toward first so he sits lower-left with the batter on the right
+const PITCH_OFF=8,PITCH_X=1.2; // nearer the plate, and a little toward first so he sits lower-left with the batter on the right
 function placePitcher(){const o=mode==='pitch';pitcherP.g.position.set(o?PITCH_X:0,o?0:.25,-18.44+(o?PITCH_OFF:0));}
 const RELEASE_PT=(()=>{const d=sampleClip(PC,RELEASE,{});pitcherP.g.updateMatrixWorld();return pitcherP.g.localToWorld(d.rHa.clone());})();
 const catcherP=makePlayer(A(HOME,{skin:SKINS[2],num:2,name:'王凱',glove:1,mask:1,helmet:1}));catcherP.g.position.set(0,0,1.15);catcherP.g.rotation.y=Math.PI;
@@ -868,7 +868,7 @@ function updateCamera(dt){
     else camPos.lerp(camGoal,k);camLook.lerp(lookGoal,kl);camera.fov+=(fov-camera.fov)*Math.min(1,dt*(hit?5:4));}
   camera.position.copy(camPos);camera.lookAt(camLook);camera.updateProjectionMatrix();
 }
-const PCAM=V(.9,2.65,-24.4),PLOOK=V(-.35,.85,.6),PFOV=9.5;
+const PCAM=V(.9,2.65,-24.4),PLOOK=V(-.08,.85,.6),PFOV=9.5;
 
 // ---------- main loop ----------
 const clock=new THREE.Clock(),_w=V();
